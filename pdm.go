@@ -9,11 +9,15 @@ import (
 
 type pdm struct {
 	graph graph.Graph[activity.Activity, enums.Dependency]
-	Name  string
+	name  string
 }
 
 func New(name string) *pdm {
-	return &pdm{graph: graph.New[activity.Activity, enums.Dependency](), Name: name}
+	return &pdm{graph: graph.New[activity.Activity, enums.Dependency](), name: name}
+}
+
+func (p *pdm) Name() string {
+	return p.name
 }
 
 func (p *pdm) AddActivity(activity activity.Activity) {
