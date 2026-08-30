@@ -1,0 +1,41 @@
+package pdm
+
+import (
+	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/toposort/graph"
+	"github.com/gtantech/toposort/graph/vertex"
+)
+
+type pdm struct {
+	graph       graph.Graph[activity.Activity, dependency.Dependency]
+	displayName string
+}
+
+func New(name string) *pdm {
+	return &pdm{graph: graph.New[activity.Activity, dependency.Dependency](), displayName: name}
+}
+
+func (p *pdm) DisplayName() string {
+	return p.displayName
+}
+
+func (p *pdm) AddActivity(activity activity.Activity) {
+	p.graph.AddVertex(activity)
+}
+
+func (p *pdm) RemoveActivity(activity activity.Activity) {
+	p.graph.RemoveVertex(activity)
+}
+
+func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia dependency.Dependency) {
+	p.graph.AddEdge(dependsVia, predecessor, successor)
+}
+
+func (p *pdm) RemoveDependency(predecessor activity.Activity, successor activity.Activity) {
+	p.graph.RemoveEdge(predecessor, successor)
+}
+
+func (p *pdm) Activities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	return p.graph.Vertices()
+}
