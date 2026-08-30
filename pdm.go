@@ -14,3 +14,7 @@ type pdm struct {
 func (p *pdm) AddActivity(activity activity.Activity) {
 	p.graph.AddVertex(activity)
 }
+
+func (p *pdm) RemoveActivity(activity activity.Activity) {
+	p.graph.RemoveVertex(activity)
+}
