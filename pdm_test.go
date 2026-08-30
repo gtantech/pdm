@@ -7,8 +7,35 @@ import (
 
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
+
+type mockGraph struct {
+	graph.Graph[activity.Activity, enums.Dependency]
+	isAddVertexCalled    bool
+	isRemoveVertexCalled bool
+	isAddEdgeCalled      bool
+	isRemoveEdgeCalled   bool
+	isVerticesCalled     bool
+}
+
+func (g *mockGraph) AddVertex(v vertex.Vertex[activity.Activity]) {
+	g.isAddVertexCalled = true
+}
+func (g *mockGraph) RemoveVertex(v vertex.Vertex[activity.Activity]) {
+	g.isRemoveVertexCalled = true
+}
+func (g *mockGraph) AddEdge(value enums.Dependency, origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
+	g.isAddEdgeCalled = true
+}
+func (g *mockGraph) RemoveEdge(origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
+	g.isRemoveEdgeCalled = true
+}
+func (g *mockGraph) Vertices() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	g.isVerticesCalled = true
+	return g.Graph.Vertices()
+}
 
 func TestPDMDisplayName(t *testing.T) {
 	dispName := "test_name"
@@ -16,6 +43,35 @@ func TestPDMDisplayName(t *testing.T) {
 
 	if got := p.DisplayName(); got != dispName {
 		t.Errorf("got %v, want %v", got, dispName)
+	}
+}
+
+func TestFields(t *testing.T) {
+	dispName := "test_name"
+	p := New(dispName)
+	mockGraph := &mockGraph{Graph: graph.New[activity.Activity, enums.Dependency]()}
+	p.graph = mockGraph
+	a := activity.New("a", time.Duration(0))
+	b := activity.New("b", time.Duration(0))
+	p.AddActivity(a)
+	if !mockGraph.isAddVertexCalled {
+		t.Errorf("graph.AddVertex not called")
+	}
+	p.RemoveActivity(a)
+	if !mockGraph.isRemoveVertexCalled {
+		t.Errorf("graph.RemoveVertex not called")
+	}
+	p.AddDependency(a, b, enums.New(enums.FS))
+	if !mockGraph.isAddEdgeCalled {
+		t.Errorf("graph.AddEdge not called")
+	}
+	p.RemoveDependency(a, b)
+	if !mockGraph.isRemoveEdgeCalled {
+		t.Errorf("graph.RemoveEdge not called")
+	}
+	p.Activities()
+	if !mockGraph.isVerticesCalled {
+		t.Errorf("graph.Vertices not called")
 	}
 }
 
