@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
 type mockGraph struct {
-	graph.Graph[activity.Activity, enums.Dependency]
+	graph.Graph[activity.Activity, dependency.Dependency]
 	isAddVertexCalled    bool
 	isRemoveVertexCalled bool
 	isAddEdgeCalled      bool
@@ -26,7 +27,7 @@ func (g *mockGraph) AddVertex(v vertex.Vertex[activity.Activity]) {
 func (g *mockGraph) RemoveVertex(v vertex.Vertex[activity.Activity]) {
 	g.isRemoveVertexCalled = true
 }
-func (g *mockGraph) AddEdge(value enums.Dependency, origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
+func (g *mockGraph) AddEdge(value dependency.Dependency, origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
 	g.isAddEdgeCalled = true
 }
 func (g *mockGraph) RemoveEdge(origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
@@ -49,7 +50,7 @@ func TestPDMDisplayName(t *testing.T) {
 func TestFields(t *testing.T) {
 	dispName := "test_name"
 	p := New(dispName)
-	mockGraph := &mockGraph{Graph: graph.New[activity.Activity, enums.Dependency]()}
+	mockGraph := &mockGraph{Graph: graph.New[activity.Activity, dependency.Dependency]()}
 	p.graph = mockGraph
 	a := activity.New("a", time.Duration(0))
 	b := activity.New("b", time.Duration(0))
@@ -61,7 +62,7 @@ func TestFields(t *testing.T) {
 	if !mockGraph.isRemoveVertexCalled {
 		t.Errorf("graph.RemoveVertex not called")
 	}
-	p.AddDependency(a, b, enums.New(enums.FS))
+	p.AddDependency(a, b, dependency.New(enums.FS))
 	if !mockGraph.isAddEdgeCalled {
 		t.Errorf("graph.AddEdge not called")
 	}
@@ -90,12 +91,12 @@ func TestPDMCreation(t *testing.T) {
 	E := activity.New("E", time.Minute*3)
 	F := activity.New("F", time.Minute*4)
 
-	p.AddDependency(A, B, enums.New(enums.FS))
-	p.AddDependency(A, C, enums.New(enums.FS))
-	p.AddDependency(B, D, enums.New(enums.FS))
-	p.AddDependency(C, E, enums.New(enums.FS))
-	p.AddDependency(D, F, enums.New(enums.FS))
-	p.AddDependency(E, F, enums.New(enums.FS))
+	p.AddDependency(A, B, dependency.New(enums.FS))
+	p.AddDependency(A, C, dependency.New(enums.FS))
+	p.AddDependency(B, D, dependency.New(enums.FS))
+	p.AddDependency(C, E, dependency.New(enums.FS))
+	p.AddDependency(D, F, dependency.New(enums.FS))
+	p.AddDependency(E, F, dependency.New(enums.FS))
 
 	for v := range p.graph.IncomingVertices(A) {
 		t.Errorf("got %v but %v does not have any incoming vertices", v.Value().DisplayName(), A.DisplayName())

@@ -2,18 +2,18 @@ package pdm
 
 import (
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
 type pdm struct {
-	graph       graph.Graph[activity.Activity, enums.Dependency]
+	graph       graph.Graph[activity.Activity, dependency.Dependency]
 	displayName string
 }
 
 func New(name string) *pdm {
-	return &pdm{graph: graph.New[activity.Activity, enums.Dependency](), displayName: name}
+	return &pdm{graph: graph.New[activity.Activity, dependency.Dependency](), displayName: name}
 }
 
 func (p *pdm) DisplayName() string {
@@ -28,7 +28,7 @@ func (p *pdm) RemoveActivity(activity activity.Activity) {
 	p.graph.RemoveVertex(activity)
 }
 
-func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia enums.Dependency) {
+func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia dependency.Dependency) {
 	p.graph.AddEdge(dependsVia, predecessor, successor)
 }
 
