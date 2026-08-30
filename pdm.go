@@ -12,6 +12,10 @@ type pdm struct {
 	Name  string
 }
 
+func New(name string) *pdm {
+	return &pdm{graph: graph.New[activity.Activity, enums.Dependency](), Name: name}
+}
+
 func (p *pdm) AddActivity(activity activity.Activity) {
 	p.graph.AddVertex(activity)
 }
