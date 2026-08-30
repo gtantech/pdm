@@ -10,3 +10,7 @@ type pdm struct {
 	graph graph.Graph[activity.Activity, enums.Dependency]
 	Name  string
 }
+
+func (p *pdm) AddActivity(activity activity.Activity) {
+	p.graph.AddVertex(activity)
+}
