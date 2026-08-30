@@ -4,6 +4,7 @@ import (
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/toposort/graph"
+	"github.com/gtantech/toposort/graph/vertex"
 )
 
 type pdm struct {
@@ -25,4 +26,8 @@ func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Ac
 
 func (p *pdm) RemoveDependency(predecessor activity.Activity, successor activity.Activity) {
 	p.graph.RemoveEdge(predecessor, successor)
+}
+
+func (p *pdm) Activities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	return p.graph.Vertices()
 }
