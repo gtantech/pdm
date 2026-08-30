@@ -18,3 +18,11 @@ func (p *pdm) AddActivity(activity activity.Activity) {
 func (p *pdm) RemoveActivity(activity activity.Activity) {
 	p.graph.RemoveVertex(activity)
 }
+
+func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia enums.Dependency) {
+	p.graph.AddEdge(dependsVia, predecessor, successor)
+}
+
+func (p *pdm) RemoveDependency(predecessor activity.Activity, successor activity.Activity) {
+	p.graph.RemoveEdge(predecessor, successor)
+}
