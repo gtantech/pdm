@@ -18,6 +18,12 @@ type activity struct {
 	duration time.Duration
 }
 
+func New(name string, duration time.Duration) *activity {
+	a := &activity{name: name, duration: duration}
+	a.Vertex = vertex.New[Activity](a)
+	return a
+}
+
 // DisplayName implements [Activity].
 func (a *activity) DisplayName() string {
 	return a.name
