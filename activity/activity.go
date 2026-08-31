@@ -22,7 +22,7 @@ type activity struct {
 	timestamps timestamp.Timestamp
 }
 
-// UpdateEarlyLateDuration implements [Activity].
+// UpdateTimestamps implements [Activity].
 func (a *activity) UpdateTimestamps(timestamps timestamp.Timestamp) {
 	a.timestamps = timestamps
 }
