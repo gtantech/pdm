@@ -2,9 +2,12 @@ package pdm
 
 import (
 	"iter"
+	"time"
 
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/toposort"
 	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
@@ -89,4 +92,31 @@ func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.
 		}
 		return hasIncomingVertices
 	})
+}
+
+// returns a map of activities to their early start and early finish values
+func (p *pdm) earlyIntervals(targetStart time.Time) (map[activity.Activity]interval.Interval, error) {
+	earlyInterval := make(map[activity.Activity]interval.Interval)
+	//initialize all start nodes
+	for a := range p.InitialPredecessorActivities() {
+		earlyInterval[a.Value()] = interval.New(targetStart, targetStart.Add(a.Value().Duration()))
+	}
+	order, err := toposort.TopologicalSort(p.graph)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range order {
+		if _, ok := earlyInterval[v.Value()]; !ok {
+			//!ok -> no early start/finish value for this activity
+			//get predecessor
+			maxEarlyFinishPredecessor := time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
+			for predecessor := range p.graph.IncomingVertices(v) {
+				if earlyFinish := earlyInterval[predecessor.Value()].Finish(); earlyFinish.Compare(maxEarlyFinishPredecessor) > 0 {
+					maxEarlyFinishPredecessor = earlyFinish
+				}
+			}
+			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor.Add(v.Value().Duration()))
+		}
+	}
+	return earlyInterval, nil
 }
