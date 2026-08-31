@@ -3,6 +3,9 @@ package activity
 import (
 	"testing"
 	"time"
+
+	"github.com/gtantech/pdm/activity/timestamp"
+	"github.com/gtantech/pdm/interval"
 )
 
 func TestDisplayName(t *testing.T) {
@@ -21,5 +24,16 @@ func TestDuration(t *testing.T) {
 
 	if got := a.Duration(); got != duration {
 		t.Errorf("got %v, want %v", got, duration)
+	}
+}
+
+func TestTimestamp(t *testing.T) {
+	dispName := "test_name"
+	duration, _ := time.ParseDuration("3m")
+	a := New(dispName, duration)
+	ts := timestamp.New(interval.New(time.Duration(0), time.Duration(1)), interval.New(time.Duration(0), time.Duration(1)))
+	a.UpdateTimestamps(ts)
+	if got, want := a.Timestamps(), ts; got != want {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
