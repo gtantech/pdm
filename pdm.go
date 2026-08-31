@@ -2,11 +2,15 @@ package pdm
 
 import (
 	"iter"
+	"math"
+	"slices"
 	"time"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/toposort"
 	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
@@ -114,4 +118,46 @@ func (p *pdm) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Act
 		}
 	}
 	return earlyInterval
+}
+
+func (p *pdm) UpdateActivityTimestamps() error {
+	order, err := toposort.TopologicalSort(p.graph)
+	if err != nil {
+		return err
+	}
+
+	// forwards pass
+	earlyIntervals := p.earlyIntervals(order)
+
+	// backwards pass
+	lateIntervals := make(map[activity.Activity]interval.Interval)
+
+	// initialize all end nodes
+	for a := range p.FinalSuccessorActivities() {
+		earlyInterval := earlyIntervals[a.Value()]
+		lateFinish := earlyInterval.Finish()
+		lateStart := lateFinish - a.Value().Duration()
+		lateIntervals[a.Value()] = interval.New(lateStart, lateFinish)
+	}
+
+	slices.Reverse(order)
+	for _, v := range order {
+		if _, ok := lateIntervals[v.Value()]; !ok {
+			//!ok -> no late start/finish value for this activity
+			//get successor
+			minLateStartSuccessor := time.Duration(math.MaxInt64)
+			for successor := range p.graph.OutgoingVertices(v) {
+				if lateStart := lateIntervals[successor.Value()].Start(); lateStart < minLateStartSuccessor {
+					minLateStartSuccessor = lateStart
+				}
+			}
+			lateIntervals[v.Value()] = interval.New(minLateStartSuccessor-v.Value().Duration(), minLateStartSuccessor)
+		}
+	}
+
+	//update activities
+	for v := range p.graph.Vertices() {
+		v.Value().UpdateTimestamps(timestamp.New(earlyIntervals[v.Value()], lateIntervals[v.Value()]))
+	}
+	return nil
 }
