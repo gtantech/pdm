@@ -165,3 +165,32 @@ func TestStartingPredecessorActivities(t *testing.T) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
+
+func TestFinishingSuccessorActivities(t *testing.T) {
+	dispName := "test_name"
+	p := New(dispName)
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New("A", time.Minute*5)
+	B := activity.New("B", time.Minute*4)
+	C := activity.New("C", time.Minute*5)
+	D := activity.New("D", time.Minute*6)
+	E := activity.New("E", time.Minute*3)
+	F := activity.New("F", time.Minute*4)
+
+	p.AddDependency(A, B, dependency.New(enums.FS))
+	p.AddDependency(A, C, dependency.New(enums.FS))
+	p.AddDependency(B, D, dependency.New(enums.FS))
+	p.AddDependency(C, E, dependency.New(enums.FS))
+	p.AddDependency(D, F, dependency.New(enums.FS))
+	p.AddDependency(E, F, dependency.New(enums.FS))
+
+	spa := slices.Collect(p.FinishingSuccessorActivities())
+
+	if want := []vertex.Vertex[activity.Activity]{F}; !slices.Equal(spa, want) {
+		t.Errorf("got %v, want %v", spa, want)
+	}
+}

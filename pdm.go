@@ -71,3 +71,22 @@ func (p *pdm) StartingPredecessorActivities() func(yield func(vertex.Vertex[acti
 		return hasOutgoingVertices
 	})
 }
+
+func (p *pdm) FinishingSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+		for range p.graph.OutgoingVertices(v) {
+			// starting successor should not have any outgoing vertex, return false if it does
+			return false
+		}
+		hasIncomingVertices := false
+
+		for range p.graph.IncomingVertices(v) {
+			// starting predecessor should have at least 1 outgoing vertex
+			if hasIncomingVertices {
+				break
+			}
+			hasIncomingVertices = true
+		}
+		return hasIncomingVertices
+	})
+}
