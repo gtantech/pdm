@@ -3,6 +3,7 @@ package activity
 import (
 	"time"
 
+	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
@@ -10,12 +11,25 @@ type Activity interface {
 	vertex.Vertex[Activity]
 	Duration() time.Duration
 	DisplayName() string
+	Timestamps() timestamp.Timestamp //timestamp relative to the start (time at 0)
+	UpdateTimestamps(timestamps timestamp.Timestamp)
 }
 
 type activity struct {
 	vertex.Vertex[Activity]
-	name     string
-	duration time.Duration
+	name       string
+	duration   time.Duration
+	timestamps timestamp.Timestamp
+}
+
+// UpdateEarlyLateDuration implements [Activity].
+func (a *activity) UpdateTimestamps(timestamps timestamp.Timestamp) {
+	a.timestamps = timestamps
+}
+
+// Timestamps implements [Activity].
+func (a *activity) Timestamps() timestamp.Timestamp {
+	return a.timestamps
 }
 
 func New(name string, duration time.Duration) *activity {
