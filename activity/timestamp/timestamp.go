@@ -1,29 +1,29 @@
-package duration
+package timestamp
 
 import "github.com/gtantech/pdm/interval"
 
-type Duration interface {
+type Timestamp interface {
 	Early() interval.Interval
 	Late() interval.Interval
 }
 
-type duration struct {
+type timestamp struct {
 	early interval.Interval
 	late  interval.Interval
 }
 
-func New(early interval.Interval, late interval.Interval) *duration {
-	return &duration{early: early, late: late}
+func New(early interval.Interval, late interval.Interval) *timestamp {
+	return &timestamp{early: early, late: late}
 }
 
-// Early implements [Duration].
-func (d *duration) Early() interval.Interval {
+// Early implements [Timestamp].
+func (d *timestamp) Early() interval.Interval {
 	return d.early
 }
 
-// Late implements [Duration].
-func (d *duration) Late() interval.Interval {
+// Late implements [Timestamp].
+func (d *timestamp) Late() interval.Interval {
 	return d.late
 }
 
-var _ Duration = (*duration)(nil) //ensures duration implements Duration at compile time
+var _ Timestamp = (*timestamp)(nil) //ensures duration implements Duration at compile time
