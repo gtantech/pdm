@@ -1,6 +1,8 @@
 package pdm
 
 import (
+	"iter"
+
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/toposort/graph"
@@ -38,4 +40,34 @@ func (p *pdm) RemoveDependency(predecessor activity.Activity, successor activity
 
 func (p *pdm) Activities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
 	return p.graph.Vertices()
+}
+
+func (p *pdm) filter(seq iter.Seq[vertex.Vertex[activity.Activity]], predicate func(vertex.Vertex[activity.Activity]) bool) iter.Seq[vertex.Vertex[activity.Activity]] {
+	return func(yield func(vertex.Vertex[activity.Activity]) bool) {
+		seq(func(value vertex.Vertex[activity.Activity]) bool {
+			if predicate(value) {
+				return yield(value)
+			}
+			return true
+		})
+	}
+}
+
+func (p *pdm) StartingPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+		for range p.graph.IncomingVertices(v) {
+			// starting predecessor should not have any incoming vertex, return false if it does
+			return false
+		}
+		hasOutgoingVertices := false
+
+		for range p.graph.OutgoingVertices(v) {
+			// starting predecessor should have at least 1 outgoing vertex
+			if hasOutgoingVertices {
+				break
+			}
+			hasOutgoingVertices = true
+		}
+		return hasOutgoingVertices
+	})
 }
