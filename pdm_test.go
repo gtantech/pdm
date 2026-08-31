@@ -137,7 +137,7 @@ func TestPDMCreation(t *testing.T) {
 	}
 }
 
-func TestStartingPredecessorActivities(t *testing.T) {
+func TestInitialPredecessorActivities(t *testing.T) {
 	dispName := "test_name"
 	p := New(dispName)
 
@@ -159,14 +159,14 @@ func TestStartingPredecessorActivities(t *testing.T) {
 	p.AddDependency(D, F, dependency.New(enums.FS))
 	p.AddDependency(E, F, dependency.New(enums.FS))
 
-	spa := slices.Collect(p.StartingPredecessorActivities())
+	spa := slices.Collect(p.InitialPredecessorActivities())
 
 	if want := []vertex.Vertex[activity.Activity]{A}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
 
-func TestFinishingSuccessorActivities(t *testing.T) {
+func TestFinalSuccessorActivities(t *testing.T) {
 	dispName := "test_name"
 	p := New(dispName)
 
@@ -188,7 +188,7 @@ func TestFinishingSuccessorActivities(t *testing.T) {
 	p.AddDependency(D, F, dependency.New(enums.FS))
 	p.AddDependency(E, F, dependency.New(enums.FS))
 
-	spa := slices.Collect(p.FinishingSuccessorActivities())
+	spa := slices.Collect(p.FinalSuccessorActivities())
 
 	if want := []vertex.Vertex[activity.Activity]{F}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)

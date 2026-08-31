@@ -53,7 +53,7 @@ func (p *pdm) filter(seq iter.Seq[vertex.Vertex[activity.Activity]], predicate f
 	}
 }
 
-func (p *pdm) StartingPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+func (p *pdm) InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
 	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
 		for range p.graph.IncomingVertices(v) {
 			// starting predecessor should not have any incoming vertex, return false if it does
@@ -72,7 +72,7 @@ func (p *pdm) StartingPredecessorActivities() func(yield func(vertex.Vertex[acti
 	})
 }
 
-func (p *pdm) FinishingSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
 	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
 		for range p.graph.OutgoingVertices(v) {
 			// starting successor should not have any outgoing vertex, return false if it does
