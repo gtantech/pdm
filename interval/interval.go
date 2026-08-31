@@ -3,26 +3,26 @@ package interval
 import "time"
 
 type Interval interface {
-	Start() time.Time
-	Finish() time.Time
+	Start() time.Duration
+	Finish() time.Duration
 }
 
 type interval struct {
-	start  time.Time
-	finish time.Time
+	start  time.Duration
+	finish time.Duration
 }
 
-func New(start time.Time, finish time.Time) *interval {
+func New(start time.Duration, finish time.Duration) *interval {
 	return &interval{start: start, finish: finish}
 }
 
 // Finish implements [ActivityInterval].
-func (i *interval) Finish() time.Time {
+func (i *interval) Finish() time.Duration {
 	return i.finish
 }
 
 // Start implements [ActivityInterval].
-func (i *interval) Start() time.Time {
+func (i *interval) Start() time.Duration {
 	return i.start
 }
 

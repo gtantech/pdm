@@ -94,23 +94,23 @@ func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.
 }
 
 // returns a map of activities to their early start and early finish values
-func (p *pdm) earlyIntervals(targetStart time.Time, topologicalSortedOrder []vertex.Vertex[activity.Activity]) map[activity.Activity]interval.Interval {
+func (p *pdm) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Activity]) map[activity.Activity]interval.Interval {
 	earlyInterval := make(map[activity.Activity]interval.Interval)
 	//initialize all start nodes
 	for a := range p.InitialPredecessorActivities() {
-		earlyInterval[a.Value()] = interval.New(targetStart, targetStart.Add(a.Value().Duration()))
+		earlyInterval[a.Value()] = interval.New(time.Duration(0), a.Value().Duration())
 	}
 	for _, v := range topologicalSortedOrder {
 		if _, ok := earlyInterval[v.Value()]; !ok {
 			//!ok -> no early start/finish value for this activity
 			//get predecessor
-			maxEarlyFinishPredecessor := time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
+			maxEarlyFinishPredecessor := time.Duration(0)
 			for predecessor := range p.graph.IncomingVertices(v) {
-				if earlyFinish := earlyInterval[predecessor.Value()].Finish(); earlyFinish.Compare(maxEarlyFinishPredecessor) > 0 {
+				if earlyFinish := earlyInterval[predecessor.Value()].Finish(); earlyFinish > maxEarlyFinishPredecessor {
 					maxEarlyFinishPredecessor = earlyFinish
 				}
 			}
-			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor.Add(v.Value().Duration()))
+			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor+v.Value().Duration())
 		}
 	}
 	return earlyInterval

@@ -6,8 +6,8 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	start := time.Date(2026, 8, 30, 22, 21, 0, 0, time.Local)
-	finish := time.Date(2026, 8, 31, 22, 21, 0, 0, time.Local)
+	start := time.Duration(0 * time.Minute)
+	finish := time.Duration(1 * time.Minute)
 	i := New(start, finish)
 
 	if got, want := i.Start(), start; got != want {
