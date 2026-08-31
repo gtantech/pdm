@@ -7,7 +7,6 @@ import (
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/interval"
-	"github.com/gtantech/toposort"
 	"github.com/gtantech/toposort/graph"
 	"github.com/gtantech/toposort/graph/vertex"
 )
@@ -95,17 +94,13 @@ func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.
 }
 
 // returns a map of activities to their early start and early finish values
-func (p *pdm) earlyIntervals(targetStart time.Time) (map[activity.Activity]interval.Interval, error) {
+func (p *pdm) earlyIntervals(targetStart time.Time, topologicalSortedOrder []vertex.Vertex[activity.Activity]) map[activity.Activity]interval.Interval {
 	earlyInterval := make(map[activity.Activity]interval.Interval)
 	//initialize all start nodes
 	for a := range p.InitialPredecessorActivities() {
 		earlyInterval[a.Value()] = interval.New(targetStart, targetStart.Add(a.Value().Duration()))
 	}
-	order, err := toposort.TopologicalSort(p.graph)
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range order {
+	for _, v := range topologicalSortedOrder {
 		if _, ok := earlyInterval[v.Value()]; !ok {
 			//!ok -> no early start/finish value for this activity
 			//get predecessor
@@ -118,5 +113,5 @@ func (p *pdm) earlyIntervals(targetStart time.Time) (map[activity.Activity]inter
 			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor.Add(v.Value().Duration()))
 		}
 	}
-	return earlyInterval, nil
+	return earlyInterval
 }
