@@ -2,18 +2,18 @@ package data
 
 import "time"
 
-type Data interface {
+type ActivityData interface {
 	Duration() time.Duration
 }
 
-type data struct {
+type activityData struct {
 	duration time.Duration
 }
 
-func New(duration time.Duration) *data {
-	return &data{duration: duration}
+func New(duration time.Duration) *activityData {
+	return &activityData{duration: duration}
 }
 
-func (d *data) Duration() time.Duration {
+func (d *activityData) Duration() time.Duration {
 	return d.duration
 }

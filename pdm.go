@@ -16,7 +16,7 @@ import (
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
-type PDM[D data.Data] interface {
+type PDM[D data.ActivityData] interface {
 	AddActivity(activity activity.Activity[D])
 	RemoveActivity(activity activity.Activity[D])
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency)
@@ -28,13 +28,13 @@ type PDM[D data.Data] interface {
 	UpdateActivityTimestamps() error
 }
 
-var _ PDM[data.Data] = (*pdm[data.Data])(nil) //ensures pdm implements PDM at compile time
+var _ PDM[data.ActivityData] = (*pdm[data.ActivityData])(nil) //ensures pdm implements PDM at compile time
 
-type pdm[D data.Data] struct {
+type pdm[D data.ActivityData] struct {
 	graph graph.Graph[activity.Activity[D], dependency.Dependency]
 }
 
-func New[D data.Data]() *pdm[D] {
+func New[D data.ActivityData]() *pdm[D] {
 	return &pdm[D]{graph: graph.New[activity.Activity[D], dependency.Dependency]()}
 }
 

@@ -17,12 +17,12 @@ import (
 )
 
 type mockActivityData struct {
-	data.Data
+	data.ActivityData
 	name string
 }
 
 func NewMockActivityData(name string, duration time.Duration) *mockActivityData {
-	return &mockActivityData{name: name, Data: data.New(duration)}
+	return &mockActivityData{name: name, ActivityData: data.New(duration)}
 }
 
 type mockGraph struct {
