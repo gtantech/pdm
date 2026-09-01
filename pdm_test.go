@@ -340,3 +340,48 @@ func TestLoneActivity(t *testing.T) {
 		t.Errorf("missing activities")
 	}
 }
+
+func TestUpdateActivityTimestampsLone(t *testing.T) {
+	dispName := "test_name"
+	p := New(dispName)
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New("A", time.Minute*3)
+	B := activity.New("B", time.Minute*4)
+	C := activity.New("C", time.Minute*2)
+	D := activity.New("D", time.Minute*5)
+	E := activity.New("E", time.Minute*1)
+	F := activity.New("F", time.Minute*2)
+	G := activity.New("G", time.Minute*4)
+	H := activity.New("H", time.Minute*3)
+	I := activity.New("I", time.Minute*3)
+
+	p.AddActivity(I)
+
+	p.AddDependency(A, B, dependency.New(enums.FS))
+	p.AddDependency(A, C, dependency.New(enums.FS))
+	p.AddDependency(B, D, dependency.New(enums.FS))
+	p.AddDependency(C, E, dependency.New(enums.FS))
+	p.AddDependency(C, F, dependency.New(enums.FS))
+	p.AddDependency(D, G, dependency.New(enums.FS))
+	p.AddDependency(E, G, dependency.New(enums.FS))
+	p.AddDependency(F, H, dependency.New(enums.FS))
+	p.AddDependency(G, H, dependency.New(enums.FS))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := I.Timestamps().Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := I.Timestamps().Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
