@@ -1,6 +1,7 @@
 package pdm
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"testing"
@@ -383,5 +384,23 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 	if got, want := I.Timestamps().Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
+	}
+}
+
+func TestTopologicalSorterError(t *testing.T) {
+
+	dispName := "test_name"
+	p := New(dispName)
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity, dependency.Dependency]) ([]vertex.Vertex[activity.Activity], error) {
+		return nil, fmt.Errorf("test error")
+	})
+
+	if err == nil {
+		t.Errorf("expected error")
 	}
 }
