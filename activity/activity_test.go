@@ -8,11 +8,11 @@ import (
 	"github.com/gtantech/pdm/interval"
 )
 
-func TestDisplayName(t *testing.T) {
+func TestData(t *testing.T) {
 	dispName := "test_name"
 	a := New(dispName, time.Duration(0))
 
-	if got := a.DisplayName(); got != dispName {
+	if got := a.Data(); got != dispName {
 		t.Errorf("got %v, want %v", got, dispName)
 	}
 }

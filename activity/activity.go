@@ -7,46 +7,46 @@ import (
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
-type Activity interface {
-	vertex.Vertex[Activity]
+type Activity[D any] interface {
+	vertex.Vertex[Activity[D]]
 	Duration() time.Duration
-	DisplayName() string
+	Data() D
 	Timestamps() timestamp.Timestamp //timestamp relative to the start (time at 0)
 	UpdateTimestamps(timestamps timestamp.Timestamp)
 }
 
-type activity struct {
-	vertex.Vertex[Activity]
-	name       string
+type activity[D any] struct {
+	vertex.Vertex[Activity[D]]
+	data       D
 	duration   time.Duration
 	timestamps timestamp.Timestamp
 }
 
 // UpdateTimestamps implements [Activity].
-func (a *activity) UpdateTimestamps(timestamps timestamp.Timestamp) {
+func (a *activity[D]) UpdateTimestamps(timestamps timestamp.Timestamp) {
 	a.timestamps = timestamps
 }
 
 // Timestamps implements [Activity].
-func (a *activity) Timestamps() timestamp.Timestamp {
+func (a *activity[D]) Timestamps() timestamp.Timestamp {
 	return a.timestamps
 }
 
-func New(name string, duration time.Duration) *activity {
-	a := &activity{name: name, duration: duration}
-	a.Vertex = vertex.New[Activity](a)
+func New[D any](data D, duration time.Duration) *activity[D] {
+	a := &activity[D]{data: data, duration: duration}
+	a.Vertex = vertex.New[Activity[D]](a)
 	return a
 }
 
 // DisplayName implements [Activity].
-func (a *activity) DisplayName() string {
-	return a.name
+func (a *activity[D]) Data() D {
+	return a.data
 }
 
 // Duration implements [Activity].
-func (a *activity) Duration() time.Duration {
+func (a *activity[D]) Duration() time.Duration {
 	return a.duration
 }
 
-var _ vertex.Vertex[Activity] = (*activity)(nil) //ensures *activity implements vertex.Vertex[Activity] at compile time
-var _ Activity = (*activity)(nil)                //ensures *activity implements Activity at compile time
+var _ vertex.Vertex[Activity[int]] = (*activity[int])(nil) //ensures *activity implements vertex.Vertex[Activity] at compile time
+var _ Activity[int] = (*activity[int])(nil)                //ensures *activity implements Activity at compile time
