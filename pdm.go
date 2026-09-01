@@ -134,8 +134,8 @@ func (p *pdm) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Act
 	return earlyInterval
 }
 
-func (p *pdm) UpdateActivityTimestamps() error {
-	order, err := toposort.TopologicalSort(p.graph)
+func (p *pdm) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity, dependency.Dependency]) ([]vertex.Vertex[activity.Activity], error)) error {
+	order, err := topologicalSorter(p.graph)
 	if err != nil {
 		return err
 	}
@@ -181,4 +181,8 @@ func (p *pdm) UpdateActivityTimestamps() error {
 		v.Value().UpdateTimestamps(timestamp.New(earlyIntervals[v.Value()], lateIntervals[v.Value()]))
 	}
 	return nil
+}
+
+func (p *pdm) UpdateActivityTimestamps() error {
+	return p.updateActivityTimestamp(toposort.TopologicalSort)
 }
