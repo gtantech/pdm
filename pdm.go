@@ -146,6 +146,13 @@ func (p *pdm) UpdateActivityTimestamps() error {
 	// backwards pass
 	lateIntervals := make(map[activity.Activity]interval.Interval)
 
+	//update with lone activities
+	for a := range p.LoneActivities() {
+		i := interval.New(time.Duration(0), a.Value().Duration())
+		earlyIntervals[a.Value()] = i
+		lateIntervals[a.Value()] = i
+	}
+
 	// initialize all end nodes
 	for a := range p.FinalSuccessorActivities() {
 		earlyInterval := earlyIntervals[a.Value()]
