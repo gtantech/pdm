@@ -16,7 +16,7 @@ import (
 )
 
 type mockGraph struct {
-	graph.Graph[activity.Activity, dependency.Dependency]
+	graph.Graph[activity.Activity[string], dependency.Dependency]
 	isAddVertexCalled    bool
 	isRemoveVertexCalled bool
 	isAddEdgeCalled      bool
@@ -24,29 +24,29 @@ type mockGraph struct {
 	isVerticesCalled     bool
 }
 
-func (g *mockGraph) AddVertex(v vertex.Vertex[activity.Activity]) {
+func (g *mockGraph) AddVertex(v vertex.Vertex[activity.Activity[string]]) {
 	g.isAddVertexCalled = true
 }
-func (g *mockGraph) RemoveVertex(v vertex.Vertex[activity.Activity]) {
+func (g *mockGraph) RemoveVertex(v vertex.Vertex[activity.Activity[string]]) {
 	g.isRemoveVertexCalled = true
 }
-func (g *mockGraph) AddEdge(value dependency.Dependency, origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
+func (g *mockGraph) AddEdge(value dependency.Dependency, origin vertex.Vertex[activity.Activity[string]], destination vertex.Vertex[activity.Activity[string]]) {
 	g.isAddEdgeCalled = true
 }
-func (g *mockGraph) RemoveEdge(origin vertex.Vertex[activity.Activity], destination vertex.Vertex[activity.Activity]) {
+func (g *mockGraph) RemoveEdge(origin vertex.Vertex[activity.Activity[string]], destination vertex.Vertex[activity.Activity[string]]) {
 	g.isRemoveEdgeCalled = true
 }
-func (g *mockGraph) Vertices() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+func (g *mockGraph) Vertices() func(yield func(vertex.Vertex[activity.Activity[string]]) bool) {
 	g.isVerticesCalled = true
 	return g.Graph.Vertices()
 }
 
 func TestFields(t *testing.T) {
-	p := New()
-	mockGraph := &mockGraph{Graph: graph.New[activity.Activity, dependency.Dependency]()}
+	p := New[string]()
+	mockGraph := &mockGraph{Graph: graph.New[activity.Activity[string], dependency.Dependency]()}
 	p.graph = mockGraph
-	a := activity.New("a", time.Duration(0))
-	b := activity.New("b", time.Duration(0))
+	a := activity.New[string]("a", time.Duration(0))
+	b := activity.New[string]("b", time.Duration(0))
 	p.AddActivity(a)
 	if !mockGraph.isAddVertexCalled {
 		t.Errorf("graph.AddVertex not called")
@@ -70,18 +70,18 @@ func TestFields(t *testing.T) {
 }
 
 func TestPDMCreation(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*5)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*5)
-	D := activity.New("D", time.Minute*6)
-	E := activity.New("E", time.Minute*3)
-	F := activity.New("F", time.Minute*4)
+	A := activity.New[string]("A", time.Minute*5)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*5)
+	D := activity.New[string]("D", time.Minute*6)
+	E := activity.New[string]("E", time.Minute*3)
+	F := activity.New[string]("F", time.Minute*4)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -93,35 +93,35 @@ func TestPDMCreation(t *testing.T) {
 	for v := range p.graph.IncomingVertices(A) {
 		t.Errorf("got %v but %v does not have any incoming vertices", v.Value().DisplayName(), A.DisplayName())
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(B)), []vertex.Vertex[activity.Activity]{A}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(B)), []vertex.Vertex[activity.Activity[string]]{A}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(C)), []vertex.Vertex[activity.Activity]{A}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(C)), []vertex.Vertex[activity.Activity[string]]{A}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(D)), []vertex.Vertex[activity.Activity]{B}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(D)), []vertex.Vertex[activity.Activity[string]]{B}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(E)), []vertex.Vertex[activity.Activity]{C}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(E)), []vertex.Vertex[activity.Activity[string]]{C}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want, want2 := slices.Collect(p.graph.IncomingVertices(F)), []vertex.Vertex[activity.Activity]{D, E}, []vertex.Vertex[activity.Activity]{E, D}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
+	if v, want, want2 := slices.Collect(p.graph.IncomingVertices(F)), []vertex.Vertex[activity.Activity[string]]{D, E}, []vertex.Vertex[activity.Activity[string]]{E, D}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
 		t.Errorf("got %v want %v or %v", v, want, want2)
 	}
 
-	if v, want, want2 := slices.Collect(p.graph.OutgoingVertices(A)), []vertex.Vertex[activity.Activity]{B, C}, []vertex.Vertex[activity.Activity]{C, B}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
+	if v, want, want2 := slices.Collect(p.graph.OutgoingVertices(A)), []vertex.Vertex[activity.Activity[string]]{B, C}, []vertex.Vertex[activity.Activity[string]]{C, B}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
 		t.Errorf("got %v want %v or %v", v, want, want2)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(B)), []vertex.Vertex[activity.Activity]{D}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(B)), []vertex.Vertex[activity.Activity[string]]{D}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(C)), []vertex.Vertex[activity.Activity]{E}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(C)), []vertex.Vertex[activity.Activity[string]]{E}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(D)), []vertex.Vertex[activity.Activity]{F}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(D)), []vertex.Vertex[activity.Activity[string]]{F}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(E)), []vertex.Vertex[activity.Activity]{F}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(E)), []vertex.Vertex[activity.Activity[string]]{F}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
 	for v := range p.graph.OutgoingVertices(F) {
@@ -130,18 +130,18 @@ func TestPDMCreation(t *testing.T) {
 }
 
 func TestInitialPredecessorActivities(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*5)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*5)
-	D := activity.New("D", time.Minute*6)
-	E := activity.New("E", time.Minute*3)
-	F := activity.New("F", time.Minute*4)
+	A := activity.New[string]("A", time.Minute*5)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*5)
+	D := activity.New[string]("D", time.Minute*6)
+	E := activity.New[string]("E", time.Minute*3)
+	F := activity.New[string]("F", time.Minute*4)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -152,24 +152,24 @@ func TestInitialPredecessorActivities(t *testing.T) {
 
 	spa := slices.Collect(p.InitialPredecessorActivities())
 
-	if want := []vertex.Vertex[activity.Activity]{A}; !slices.Equal(spa, want) {
+	if want := []vertex.Vertex[activity.Activity[string]]{A}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
 
 func TestFinalSuccessorActivities(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*5)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*5)
-	D := activity.New("D", time.Minute*6)
-	E := activity.New("E", time.Minute*3)
-	F := activity.New("F", time.Minute*4)
+	A := activity.New[string]("A", time.Minute*5)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*5)
+	D := activity.New[string]("D", time.Minute*6)
+	E := activity.New[string]("E", time.Minute*3)
+	F := activity.New[string]("F", time.Minute*4)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -180,26 +180,26 @@ func TestFinalSuccessorActivities(t *testing.T) {
 
 	spa := slices.Collect(p.FinalSuccessorActivities())
 
-	if want := []vertex.Vertex[activity.Activity]{F}; !slices.Equal(spa, want) {
+	if want := []vertex.Vertex[activity.Activity[string]]{F}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
 
 func TestUpdateActivityTimestamps(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*3)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*2)
-	D := activity.New("D", time.Minute*5)
-	E := activity.New("E", time.Minute*1)
-	F := activity.New("F", time.Minute*2)
-	G := activity.New("G", time.Minute*4)
-	H := activity.New("H", time.Minute*3)
+	A := activity.New[string]("A", time.Minute*3)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*2)
+	D := activity.New[string]("D", time.Minute*5)
+	E := activity.New[string]("E", time.Minute*1)
+	F := activity.New[string]("F", time.Minute*2)
+	G := activity.New[string]("G", time.Minute*4)
+	H := activity.New[string]("H", time.Minute*3)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -290,15 +290,15 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 }
 
 func TestLoneActivity(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*3)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*2)
+	A := activity.New[string]("A", time.Minute*3)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*2)
 
 	p.AddActivity(A)
 	p.AddActivity(B)
@@ -328,21 +328,21 @@ func TestLoneActivity(t *testing.T) {
 }
 
 func TestUpdateActivityTimestampsLone(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New("A", time.Minute*3)
-	B := activity.New("B", time.Minute*4)
-	C := activity.New("C", time.Minute*2)
-	D := activity.New("D", time.Minute*5)
-	E := activity.New("E", time.Minute*1)
-	F := activity.New("F", time.Minute*2)
-	G := activity.New("G", time.Minute*4)
-	H := activity.New("H", time.Minute*3)
-	I := activity.New("I", time.Minute*3)
+	A := activity.New[string]("A", time.Minute*3)
+	B := activity.New[string]("B", time.Minute*4)
+	C := activity.New[string]("C", time.Minute*2)
+	D := activity.New[string]("D", time.Minute*5)
+	E := activity.New[string]("E", time.Minute*1)
+	F := activity.New[string]("F", time.Minute*2)
+	G := activity.New[string]("G", time.Minute*4)
+	H := activity.New[string]("H", time.Minute*3)
+	I := activity.New[string]("I", time.Minute*3)
 
 	p.AddActivity(I)
 
@@ -372,13 +372,13 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 }
 
 func TestTopologicalSorterError(t *testing.T) {
-	p := New()
+	p := New[string]()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
 	}
 
-	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity, dependency.Dependency]) ([]vertex.Vertex[activity.Activity], error) {
+	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[string], dependency.Dependency]) ([]vertex.Vertex[activity.Activity[string]], error) {
 		return nil, fmt.Errorf("test error")
 	})
 
