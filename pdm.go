@@ -78,6 +78,20 @@ func (p *pdm) InitialPredecessorActivities() func(yield func(vertex.Vertex[activ
 	})
 }
 
+func (p *pdm) LoneActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+		for range p.graph.OutgoingVertices(v) {
+			// lone activity should not have any outgoing vertex, return false if it does
+			return false
+		}
+		for range p.graph.IncomingVertices(v) {
+			// lone activity should not have any incoming vertex, return false if it does
+			return false
+		}
+		return true
+	})
+}
+
 func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
 	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
 		for range p.graph.OutgoingVertices(v) {
@@ -131,6 +145,13 @@ func (p *pdm) UpdateActivityTimestamps() error {
 
 	// backwards pass
 	lateIntervals := make(map[activity.Activity]interval.Interval)
+
+	//update with lone activities
+	for a := range p.LoneActivities() {
+		i := interval.New(time.Duration(0), a.Value().Duration())
+		earlyIntervals[a.Value()] = i
+		lateIntervals[a.Value()] = i
+	}
 
 	// initialize all end nodes
 	for a := range p.FinalSuccessorActivities() {
