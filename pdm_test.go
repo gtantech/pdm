@@ -91,7 +91,7 @@ func TestPDMCreation(t *testing.T) {
 	p.AddDependency(E, F, dependency.New(enums.FS))
 
 	for v := range p.graph.IncomingVertices(A) {
-		t.Errorf("got %v but %v does not have any incoming vertices", v.Value().DisplayName(), A.DisplayName())
+		t.Errorf("got %v but %v does not have any incoming vertices", v.Value().Data(), A.Data())
 	}
 	if v, want := slices.Collect(p.graph.IncomingVertices(B)), []vertex.Vertex[activity.Activity[string]]{A}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
@@ -125,7 +125,7 @@ func TestPDMCreation(t *testing.T) {
 		t.Errorf("got %v want %v", v, want)
 	}
 	for v := range p.graph.OutgoingVertices(F) {
-		t.Errorf("got %v but %v does not have any outgoing vertices", v.Value().DisplayName(), F.DisplayName())
+		t.Errorf("got %v but %v does not have any outgoing vertices", v.Value().Data(), F.Data())
 	}
 }
 

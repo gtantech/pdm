@@ -10,14 +10,14 @@ import (
 type Activity[D any] interface {
 	vertex.Vertex[Activity[D]]
 	Duration() time.Duration
-	DisplayName() string
+	Data() D
 	Timestamps() timestamp.Timestamp //timestamp relative to the start (time at 0)
 	UpdateTimestamps(timestamps timestamp.Timestamp)
 }
 
 type activity[D any] struct {
 	vertex.Vertex[Activity[D]]
-	name       string
+	data       D
 	duration   time.Duration
 	timestamps timestamp.Timestamp
 }
@@ -32,15 +32,15 @@ func (a *activity[D]) Timestamps() timestamp.Timestamp {
 	return a.timestamps
 }
 
-func New[D any](name string, duration time.Duration) *activity[D] {
-	a := &activity[D]{name: name, duration: duration}
+func New[D any](data D, duration time.Duration) *activity[D] {
+	a := &activity[D]{data: data, duration: duration}
 	a.Vertex = vertex.New[Activity[D]](a)
 	return a
 }
 
 // DisplayName implements [Activity].
-func (a *activity[D]) DisplayName() string {
-	return a.name
+func (a *activity[D]) Data() D {
+	return a.data
 }
 
 // Duration implements [Activity].
