@@ -15,51 +15,51 @@ import (
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
-type PDM interface {
-	AddActivity(activity activity.Activity)
-	RemoveActivity(activity activity.Activity)
-	AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia dependency.Dependency)
-	RemoveDependency(predecessor activity.Activity, successor activity.Activity)
-	Activities() func(yield func(vertex.Vertex[activity.Activity]) bool)
-	InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
-	LoneActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
-	FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
+type PDM[D any] interface {
+	AddActivity(activity activity.Activity[D])
+	RemoveActivity(activity activity.Activity[D])
+	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency)
+	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
+	Activities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool)
+	InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool)
+	LoneActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool)
+	FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool)
 	UpdateActivityTimestamps() error
 }
 
-var _ PDM = (*pdm)(nil) //ensures pdm implements PDM at compile time
+var _ PDM[int] = (*pdm[int])(nil) //ensures pdm implements PDM at compile time
 
-type pdm struct {
-	graph graph.Graph[activity.Activity, dependency.Dependency]
+type pdm[D any] struct {
+	graph graph.Graph[activity.Activity[D], dependency.Dependency]
 }
 
-func New() *pdm {
-	return &pdm{graph: graph.New[activity.Activity, dependency.Dependency]()}
+func New[D any]() *pdm[D] {
+	return &pdm[D]{graph: graph.New[activity.Activity[D], dependency.Dependency]()}
 }
 
-func (p *pdm) AddActivity(activity activity.Activity) {
+func (p *pdm[D]) AddActivity(activity activity.Activity[D]) {
 	p.graph.AddVertex(activity)
 }
 
-func (p *pdm) RemoveActivity(activity activity.Activity) {
+func (p *pdm[D]) RemoveActivity(activity activity.Activity[D]) {
 	p.graph.RemoveVertex(activity)
 }
 
-func (p *pdm) AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia dependency.Dependency) {
+func (p *pdm[D]) AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency) {
 	p.graph.AddEdge(dependsVia, predecessor, successor)
 }
 
-func (p *pdm) RemoveDependency(predecessor activity.Activity, successor activity.Activity) {
+func (p *pdm[D]) RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D]) {
 	p.graph.RemoveEdge(predecessor, successor)
 }
 
-func (p *pdm) Activities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
+func (p *pdm[D]) Activities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool) {
 	return p.graph.Vertices()
 }
 
-func (p *pdm) filter(seq iter.Seq[vertex.Vertex[activity.Activity]], predicate func(vertex.Vertex[activity.Activity]) bool) iter.Seq[vertex.Vertex[activity.Activity]] {
-	return func(yield func(vertex.Vertex[activity.Activity]) bool) {
-		seq(func(value vertex.Vertex[activity.Activity]) bool {
+func (p *pdm[D]) filter(seq iter.Seq[vertex.Vertex[activity.Activity[D]]], predicate func(vertex.Vertex[activity.Activity[D]]) bool) iter.Seq[vertex.Vertex[activity.Activity[D]]] {
+	return func(yield func(vertex.Vertex[activity.Activity[D]]) bool) {
+		seq(func(value vertex.Vertex[activity.Activity[D]]) bool {
 			if predicate(value) {
 				return yield(value)
 			}
@@ -68,8 +68,8 @@ func (p *pdm) filter(seq iter.Seq[vertex.Vertex[activity.Activity]], predicate f
 	}
 }
 
-func (p *pdm) InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
-	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+func (p *pdm[D]) InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity[D]]) bool {
 		for range p.graph.IncomingVertices(v) {
 			// starting predecessor should not have any incoming vertex, return false if it does
 			return false
@@ -87,8 +87,8 @@ func (p *pdm) InitialPredecessorActivities() func(yield func(vertex.Vertex[activ
 	})
 }
 
-func (p *pdm) LoneActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
-	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+func (p *pdm[D]) LoneActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity[D]]) bool {
 		for range p.graph.OutgoingVertices(v) {
 			// lone activity should not have any outgoing vertex, return false if it does
 			return false
@@ -101,8 +101,8 @@ func (p *pdm) LoneActivities() func(yield func(vertex.Vertex[activity.Activity])
 	})
 }
 
-func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool) {
-	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity]) bool {
+func (p *pdm[D]) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity[D]]) bool) {
+	return p.filter(p.Activities(), func(v vertex.Vertex[activity.Activity[D]]) bool {
 		for range p.graph.OutgoingVertices(v) {
 			// starting successor should not have any outgoing vertex, return false if it does
 			return false
@@ -121,8 +121,8 @@ func (p *pdm) FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.
 }
 
 // returns a map of activities to their early start and early finish values
-func (p *pdm) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Activity]) map[activity.Activity]interval.Interval {
-	earlyInterval := make(map[activity.Activity]interval.Interval)
+func (p *pdm[D]) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Activity[D]]) map[activity.Activity[D]]interval.Interval {
+	earlyInterval := make(map[activity.Activity[D]]interval.Interval)
 	//initialize all start nodes
 	for a := range p.InitialPredecessorActivities() {
 		earlyInterval[a.Value()] = interval.New(time.Duration(0), a.Value().Duration())
@@ -143,7 +143,7 @@ func (p *pdm) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.Act
 	return earlyInterval
 }
 
-func (p *pdm) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity, dependency.Dependency]) ([]vertex.Vertex[activity.Activity], error)) error {
+func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], dependency.Dependency]) ([]vertex.Vertex[activity.Activity[D]], error)) error {
 	order, err := topologicalSorter(p.graph)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (p *pdm) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activ
 	earlyIntervals := p.earlyIntervals(order)
 
 	// backwards pass
-	lateIntervals := make(map[activity.Activity]interval.Interval)
+	lateIntervals := make(map[activity.Activity[D]]interval.Interval)
 
 	//update with lone activities
 	for a := range p.LoneActivities() {
@@ -192,6 +192,6 @@ func (p *pdm) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activ
 	return nil
 }
 
-func (p *pdm) UpdateActivityTimestamps() error {
+func (p *pdm[D]) UpdateActivityTimestamps() error {
 	return p.updateActivityTimestamp(toposort.TopologicalSort)
 }
