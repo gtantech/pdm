@@ -15,6 +15,20 @@ import (
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
+type PDM interface {
+	AddActivity(activity activity.Activity)
+	RemoveActivity(activity activity.Activity)
+	AddDependency(predecessor activity.Activity, successor activity.Activity, dependsVia dependency.Dependency)
+	RemoveDependency(predecessor activity.Activity, successor activity.Activity)
+	Activities() func(yield func(vertex.Vertex[activity.Activity]) bool)
+	InitialPredecessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
+	LoneActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
+	FinalSuccessorActivities() func(yield func(vertex.Vertex[activity.Activity]) bool)
+	UpdateActivityTimestamps() error
+}
+
+var _ PDM = (*pdm)(nil) //ensures pdm implements PDM at compile time
+
 type pdm struct {
 	graph graph.Graph[activity.Activity, dependency.Dependency]
 }
