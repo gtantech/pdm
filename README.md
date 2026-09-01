@@ -3,6 +3,15 @@ This is a Go package that provides an implementation to help plan a project via 
 
 ## Table of Contents
 - [License](#license)
+- [Install](#install)
+
+## Install
+Install via `go get`. Note that Go 1.23 or newer is required.
+
+```sh
+# After: go mod init ...
+go get -u github.com/gtantech/pdm
+```
 
 ## License
 
