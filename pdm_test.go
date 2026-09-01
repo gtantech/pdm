@@ -41,18 +41,8 @@ func (g *mockGraph) Vertices() func(yield func(vertex.Vertex[activity.Activity])
 	return g.Graph.Vertices()
 }
 
-func TestPDMDisplayName(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
-
-	if got := p.DisplayName(); got != dispName {
-		t.Errorf("got %v, want %v", got, dispName)
-	}
-}
-
 func TestFields(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 	mockGraph := &mockGraph{Graph: graph.New[activity.Activity, dependency.Dependency]()}
 	p.graph = mockGraph
 	a := activity.New("a", time.Duration(0))
@@ -80,8 +70,7 @@ func TestFields(t *testing.T) {
 }
 
 func TestPDMCreation(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -141,8 +130,7 @@ func TestPDMCreation(t *testing.T) {
 }
 
 func TestInitialPredecessorActivities(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -170,8 +158,7 @@ func TestInitialPredecessorActivities(t *testing.T) {
 }
 
 func TestFinalSuccessorActivities(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -199,8 +186,7 @@ func TestFinalSuccessorActivities(t *testing.T) {
 }
 
 func TestUpdateActivityTimestamps(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -304,8 +290,7 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 }
 
 func TestLoneActivity(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -343,8 +328,7 @@ func TestLoneActivity(t *testing.T) {
 }
 
 func TestUpdateActivityTimestampsLone(t *testing.T) {
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")
@@ -388,9 +372,7 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 }
 
 func TestTopologicalSorterError(t *testing.T) {
-
-	dispName := "test_name"
-	p := New(dispName)
+	p := New()
 
 	if p.graph == nil {
 		t.Errorf("expected non-nil graph")

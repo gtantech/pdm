@@ -16,16 +16,11 @@ import (
 )
 
 type pdm struct {
-	graph       graph.Graph[activity.Activity, dependency.Dependency]
-	displayName string
+	graph graph.Graph[activity.Activity, dependency.Dependency]
 }
 
-func New(name string) *pdm {
-	return &pdm{graph: graph.New[activity.Activity, dependency.Dependency](), displayName: name}
-}
-
-func (p *pdm) DisplayName() string {
-	return p.displayName
+func New() *pdm {
+	return &pdm{graph: graph.New[activity.Activity, dependency.Dependency]()}
 }
 
 func (p *pdm) AddActivity(activity activity.Activity) {
