@@ -55,8 +55,8 @@ func TestFields(t *testing.T) {
 	p := New[*mockActivityData]()
 	mockGraph := &mockGraph{Graph: graph.New[activity.Activity[*mockActivityData], dependency.Dependency]()}
 	p.graph = mockGraph
-	a := activity.New[*mockActivityData](NewMockActivityData("a", time.Duration(0)))
-	b := activity.New[*mockActivityData](NewMockActivityData("b", time.Duration(0)))
+	a := activity.New(NewMockActivityData("a", time.Duration(0)))
+	b := activity.New(NewMockActivityData("b", time.Duration(0)))
 	p.AddActivity(a)
 	if !mockGraph.isAddVertexCalled {
 		t.Errorf("graph.AddVertex not called")
@@ -86,12 +86,12 @@ func TestPDMCreation(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*5))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*5))
-	D := activity.New[*mockActivityData](NewMockActivityData("D", time.Minute*6))
-	E := activity.New[*mockActivityData](NewMockActivityData("E", time.Minute*3))
-	F := activity.New[*mockActivityData](NewMockActivityData("F", time.Minute*4))
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -146,12 +146,12 @@ func TestInitialPredecessorActivities(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*5))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*5))
-	D := activity.New[*mockActivityData](NewMockActivityData("D", time.Minute*6))
-	E := activity.New[*mockActivityData](NewMockActivityData("E", time.Minute*3))
-	F := activity.New[*mockActivityData](NewMockActivityData("F", time.Minute*4))
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -174,12 +174,12 @@ func TestFinalSuccessorActivities(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*5))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*5))
-	D := activity.New[*mockActivityData](NewMockActivityData("D", time.Minute*6))
-	E := activity.New[*mockActivityData](NewMockActivityData("E", time.Minute*3))
-	F := activity.New[*mockActivityData](NewMockActivityData("F", time.Minute*4))
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -202,14 +202,14 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*3))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*2))
-	D := activity.New[*mockActivityData](NewMockActivityData("D", time.Minute*5))
-	E := activity.New[*mockActivityData](NewMockActivityData("E", time.Minute*1))
-	F := activity.New[*mockActivityData](NewMockActivityData("F", time.Minute*2))
-	G := activity.New[*mockActivityData](NewMockActivityData("G", time.Minute*4))
-	H := activity.New[*mockActivityData](NewMockActivityData("H", time.Minute*3))
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
@@ -306,9 +306,9 @@ func TestLoneActivity(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*3))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*2))
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
 
 	p.AddActivity(A)
 	p.AddActivity(B)
@@ -344,15 +344,15 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	A := activity.New[*mockActivityData](NewMockActivityData("A", time.Minute*3))
-	B := activity.New[*mockActivityData](NewMockActivityData("B", time.Minute*4))
-	C := activity.New[*mockActivityData](NewMockActivityData("C", time.Minute*2))
-	D := activity.New[*mockActivityData](NewMockActivityData("D", time.Minute*5))
-	E := activity.New[*mockActivityData](NewMockActivityData("E", time.Minute*1))
-	F := activity.New[*mockActivityData](NewMockActivityData("F", time.Minute*2))
-	G := activity.New[*mockActivityData](NewMockActivityData("G", time.Minute*4))
-	H := activity.New[*mockActivityData](NewMockActivityData("H", time.Minute*3))
-	I := activity.New[*mockActivityData](NewMockActivityData("I", time.Minute*3))
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+	I := activity.New(NewMockActivityData("I", time.Minute*3))
 	p.AddActivity(I)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
