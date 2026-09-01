@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/activity/data"
 	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/interval"
@@ -15,7 +16,7 @@ import (
 	"github.com/gtantech/toposort/graph/vertex"
 )
 
-type PDM[D any] interface {
+type PDM[D data.Data] interface {
 	AddActivity(activity activity.Activity[D])
 	RemoveActivity(activity activity.Activity[D])
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency)
@@ -27,13 +28,13 @@ type PDM[D any] interface {
 	UpdateActivityTimestamps() error
 }
 
-var _ PDM[int] = (*pdm[int])(nil) //ensures pdm implements PDM at compile time
+var _ PDM[data.Data] = (*pdm[data.Data])(nil) //ensures pdm implements PDM at compile time
 
-type pdm[D any] struct {
+type pdm[D data.Data] struct {
 	graph graph.Graph[activity.Activity[D], dependency.Dependency]
 }
 
-func New[D any]() *pdm[D] {
+func New[D data.Data]() *pdm[D] {
 	return &pdm[D]{graph: graph.New[activity.Activity[D], dependency.Dependency]()}
 }
 
@@ -125,7 +126,7 @@ func (p *pdm[D]) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.
 	earlyInterval := make(map[activity.Activity[D]]interval.Interval)
 	//initialize all start nodes
 	for a := range p.InitialPredecessorActivities() {
-		earlyInterval[a.Value()] = interval.New(time.Duration(0), a.Value().Duration())
+		earlyInterval[a.Value()] = interval.New(time.Duration(0), a.Value().Data().Duration())
 	}
 	for _, v := range topologicalSortedOrder {
 		if _, ok := earlyInterval[v.Value()]; !ok {
@@ -137,7 +138,7 @@ func (p *pdm[D]) earlyIntervals(topologicalSortedOrder []vertex.Vertex[activity.
 					maxEarlyFinishPredecessor = earlyFinish
 				}
 			}
-			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor+v.Value().Duration())
+			earlyInterval[v.Value()] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor+v.Value().Data().Duration())
 		}
 	}
 	return earlyInterval
@@ -157,7 +158,7 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 
 	//update with lone activities
 	for a := range p.LoneActivities() {
-		i := interval.New(time.Duration(0), a.Value().Duration())
+		i := interval.New(time.Duration(0), a.Value().Data().Duration())
 		earlyIntervals[a.Value()] = i
 		lateIntervals[a.Value()] = i
 	}
@@ -166,7 +167,7 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	for a := range p.FinalSuccessorActivities() {
 		earlyInterval := earlyIntervals[a.Value()]
 		lateFinish := earlyInterval.Finish()
-		lateStart := lateFinish - a.Value().Duration()
+		lateStart := lateFinish - a.Value().Data().Duration()
 		lateIntervals[a.Value()] = interval.New(lateStart, lateFinish)
 	}
 
@@ -181,7 +182,7 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 					minLateStartSuccessor = lateStart
 				}
 			}
-			lateIntervals[v.Value()] = interval.New(minLateStartSuccessor-v.Value().Duration(), minLateStartSuccessor)
+			lateIntervals[v.Value()] = interval.New(minLateStartSuccessor-v.Value().Data().Duration(), minLateStartSuccessor)
 		}
 	}
 
