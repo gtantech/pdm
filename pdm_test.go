@@ -301,3 +301,42 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 		t.Errorf("want: %T %#v", want, want)
 	}
 }
+
+func TestLoneActivity(t *testing.T) {
+	dispName := "test_name"
+	p := New(dispName)
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New("A", time.Minute*3)
+	B := activity.New("B", time.Minute*4)
+	C := activity.New("C", time.Minute*2)
+
+	p.AddActivity(A)
+	p.AddActivity(B)
+	p.AddActivity(C)
+
+	if got, want := len(slices.Collect(p.LoneActivities())), 3; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+	foundA := false
+	foundB := false
+	foundC := false
+	for a := range p.LoneActivities() {
+		if a.Value() == A {
+			foundA = true
+		}
+		if a.Value() == B {
+			foundB = true
+		}
+		if a.Value() == C {
+			foundC = true
+		}
+	}
+
+	if !(foundA && foundB && foundC) {
+		t.Errorf("missing activities")
+	}
+}
