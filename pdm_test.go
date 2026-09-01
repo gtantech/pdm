@@ -212,8 +212,8 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 	D := activity.New("D", time.Minute*5)
 	E := activity.New("E", time.Minute*1)
 	F := activity.New("F", time.Minute*2)
-	G := activity.New("F", time.Minute*4)
-	H := activity.New("F", time.Minute*3)
+	G := activity.New("G", time.Minute*4)
+	H := activity.New("H", time.Minute*3)
 
 	p.AddDependency(A, B, dependency.New(enums.FS))
 	p.AddDependency(A, C, dependency.New(enums.FS))
