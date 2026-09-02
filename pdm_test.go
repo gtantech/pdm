@@ -56,7 +56,10 @@ func TestFields(t *testing.T) {
 	p.graph = mockGraph
 	a := activity.New(NewMockActivityData("a", time.Duration(0)))
 	b := activity.New(NewMockActivityData("b", time.Duration(0)))
-	p.AddActivity(a)
+	added := p.AddActivity(a)
+	if added != a {
+		t.Errorf("expected return value to be %v, got %v", a, added)
+	}
 	if !mockGraph.isAddVertexCalled {
 		t.Errorf("graph.AddVertex not called")
 	}

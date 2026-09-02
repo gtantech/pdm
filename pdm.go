@@ -16,7 +16,7 @@ import (
 )
 
 type PDM[D activity.Data] interface {
-	AddActivity(activity activity.Activity[D])
+	AddActivity(activity activity.Activity[D]) activity.Activity[D]
 	RemoveActivity(activity activity.Activity[D])
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency)
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
@@ -37,8 +37,9 @@ func New[D activity.Data]() *pdm[D] {
 	return &pdm[D]{graph: graph.New[activity.Activity[D], dependency.Dependency]()}
 }
 
-func (p *pdm[D]) AddActivity(activity activity.Activity[D]) {
+func (p *pdm[D]) AddActivity(activity activity.Activity[D]) activity.Activity[D] {
 	p.graph.AddVertex(activity)
+	return activity
 }
 
 func (p *pdm[D]) RemoveActivity(activity activity.Activity[D]) {
