@@ -1,4 +1,4 @@
-module github.com/gtantech/pdm
+module github.com/gtantech/pdm/v2
 
 go 1.23
 

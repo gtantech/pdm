@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/dependency"
-	"github.com/gtantech/pdm/enums"
-	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/pdm/v2/activity"
+	"github.com/gtantech/pdm/v2/dependency"
+	"github.com/gtantech/pdm/v2/enums"
+	"github.com/gtantech/pdm/v2/interval"
 	"github.com/gtantech/toposort/v2/graph"
 )
 

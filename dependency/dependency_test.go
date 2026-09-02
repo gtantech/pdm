@@ -3,7 +3,7 @@ package dependency
 import (
 	"testing"
 
-	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/v2/enums"
 )
 
 func TestType(t *testing.T) {
