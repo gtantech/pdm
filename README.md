@@ -35,16 +35,16 @@ type Attributes struct {
 }
 
 func main() {
-	// create activities
-	A := activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "A"})
-	B := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "B"})
-	C := activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "C"})
-	D := activity.New(Attributes{Data: activity.NewData(6 * time.Hour), Name: "D"})
-	E := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "E"})
-	F := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "F"})
+	project := pdm.New[Attributes]()
+	// add activities (optional)
+	A := project.AddActivity(activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "A"}))
+	B := project.AddActivity(activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "B"}))
+	C := project.AddActivity(activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "C"}))
+	D := project.AddActivity(activity.New(Attributes{Data: activity.NewData(6 * time.Hour), Name: "D"}))
+	E := project.AddActivity(activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "E"}))
+	F := project.AddActivity(activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "F"}))
 
 	// add dependencies to pdm
-	project := pdm.New[Attributes]()
 	//                                                    // A has no dependencies
 	project.AddDependency(A, B, dependency.New(enums.FS)) // B depends on A
 	project.AddDependency(A, C, dependency.New(enums.FS)) // C depends on A
@@ -59,8 +59,10 @@ func main() {
 	// print the early/late start/finish of each activity
 	for _, activity := range []activity.Activity[Attributes]{A, B, C, D, E, F} {
 		fmt.Printf("Activity %v:\n", activity.Data().Name)
-		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n", activity.Timestamps().Early().Start(), activity.Timestamps().Early().Finish())
-		fmt.Printf("Late Start:%-5v \tLate Finish:%-5v\n\n", activity.Timestamps().Late().Start(), activity.Timestamps().Late().Finish())
+		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n",
+			activity.Timestamps().Early().Start(), activity.Timestamps().Early().Finish())
+		fmt.Printf("Late Start:%-5v \tLate Finish:%-5v\n\n",
+			activity.Timestamps().Late().Start(), activity.Timestamps().Late().Finish())
 	}
 
 }
