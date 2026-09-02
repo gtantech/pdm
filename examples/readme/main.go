@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gtantech/pdm"
-	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/dependency"
-	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/v2"
+	"github.com/gtantech/pdm/v2/activity"
+	"github.com/gtantech/pdm/v2/dependency"
+	"github.com/gtantech/pdm/v2/enums"
 )
 
 type Attributes struct {

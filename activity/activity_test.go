@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtantech/pdm/activity/timestamp"
-	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/pdm/v2/activity/timestamp"
+	"github.com/gtantech/pdm/v2/interval"
 )
 
 func TestData(t *testing.T) {
