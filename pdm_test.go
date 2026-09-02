@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/activity/data"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
@@ -17,12 +16,12 @@ import (
 )
 
 type mockActivityData struct {
-	data.ActivityData
+	activity.Data
 	name string
 }
 
 func NewMockActivityData(name string, duration time.Duration) *mockActivityData {
-	return &mockActivityData{name: name, ActivityData: data.New(duration)}
+	return &mockActivityData{name: name, Data: activity.NewData(duration)}
 }
 
 type mockGraph struct {

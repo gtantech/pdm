@@ -4,14 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtantech/pdm/activity/data"
 	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/interval"
 )
 
 func TestData(t *testing.T) {
 	duration, _ := time.ParseDuration("3m")
-	activityData := data.New(duration)
+	activityData := NewData(duration)
 	a := New(activityData)
 
 	if got := a.Data(); got != activityData {
@@ -21,7 +20,7 @@ func TestData(t *testing.T) {
 
 func TestTimestamp(t *testing.T) {
 	duration, _ := time.ParseDuration("3m")
-	a := New(data.New(duration))
+	a := New(NewData(duration))
 	ts := timestamp.New(interval.New(time.Duration(0), time.Duration(1)), interval.New(time.Duration(0), time.Duration(1)))
 	a.UpdateTimestamps(ts)
 	if got, want := a.Timestamps(), ts; got != want {
