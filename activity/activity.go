@@ -1,7 +1,7 @@
 package activity
 
 import (
-	"github.com/gtantech/pdm/v2/activity/timestamp"
+	"github.com/gtantech/pdm/activity/timestamp"
 )
 
 type Activity[D Data] interface {

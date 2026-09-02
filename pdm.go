@@ -6,10 +6,10 @@ import (
 	"slices"
 	"time"
 
-	"github.com/gtantech/pdm/v2/activity"
-	"github.com/gtantech/pdm/v2/activity/timestamp"
-	"github.com/gtantech/pdm/v2/dependency"
-	"github.com/gtantech/pdm/v2/interval"
+	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/activity/timestamp"
+	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/toposort/v2"
 	"github.com/gtantech/toposort/v2/graph"
 )
