@@ -1,4 +1,4 @@
-package data
+package activity
 
 import "time"
 
@@ -10,7 +10,7 @@ type activityData struct {
 	duration time.Duration
 }
 
-func New(duration time.Duration) *activityData {
+func NewData(duration time.Duration) *activityData {
 	return &activityData{duration: duration}
 }
 
