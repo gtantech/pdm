@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtantech/pdm/v2/interval"
+	"github.com/gtantech/pdm/interval"
 )
 
 func TestNew(t *testing.T) {

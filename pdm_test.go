@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtantech/pdm/v2/activity"
-	"github.com/gtantech/pdm/v2/dependency"
-	"github.com/gtantech/pdm/v2/enums"
-	"github.com/gtantech/pdm/v2/interval"
-	"github.com/gtantech/toposort/v2/graph"
+	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/toposort/graph"
+	"github.com/gtantech/toposort/graph/vertex"
 )
 
 type mockActivityData struct {
@@ -32,19 +33,19 @@ type mockGraph struct {
 	isVerticesCalled     bool
 }
 
-func (g *mockGraph) AddVertex(v activity.Activity[*mockActivityData]) {
+func (g *mockGraph) AddVertex(v vertex.Vertex[activity.Activity[*mockActivityData]]) {
 	g.isAddVertexCalled = true
 }
-func (g *mockGraph) RemoveVertex(v activity.Activity[*mockActivityData]) {
+func (g *mockGraph) RemoveVertex(v vertex.Vertex[activity.Activity[*mockActivityData]]) {
 	g.isRemoveVertexCalled = true
 }
-func (g *mockGraph) AddEdge(value dependency.Dependency, origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) {
+func (g *mockGraph) AddEdge(value dependency.Dependency, origin vertex.Vertex[activity.Activity[*mockActivityData]], destination vertex.Vertex[activity.Activity[*mockActivityData]]) {
 	g.isAddEdgeCalled = true
 }
-func (g *mockGraph) RemoveEdge(origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) {
+func (g *mockGraph) RemoveEdge(origin vertex.Vertex[activity.Activity[*mockActivityData]], destination vertex.Vertex[activity.Activity[*mockActivityData]]) {
 	g.isRemoveEdgeCalled = true
 }
-func (g *mockGraph) Vertices() func(yield func(activity.Activity[*mockActivityData]) bool) {
+func (g *mockGraph) Vertices() func(yield func(vertex.Vertex[activity.Activity[*mockActivityData]]) bool) {
 	g.isVerticesCalled = true
 	return g.Graph.Vertices()
 }
@@ -102,41 +103,41 @@ func TestPDMCreation(t *testing.T) {
 	p.AddDependency(E, F, dependency.New(enums.FS))
 
 	for v := range p.graph.IncomingVertices(A) {
-		t.Errorf("got %v but %v does not have any incoming vertices", v.Data(), A.Data())
+		t.Errorf("got %v but %v does not have any incoming vertices", v.Value().Data(), A.Data())
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(B)), []activity.Activity[*mockActivityData]{A}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(B)), []vertex.Vertex[activity.Activity[*mockActivityData]]{A}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(C)), []activity.Activity[*mockActivityData]{A}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(C)), []vertex.Vertex[activity.Activity[*mockActivityData]]{A}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(D)), []activity.Activity[*mockActivityData]{B}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(D)), []vertex.Vertex[activity.Activity[*mockActivityData]]{B}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.IncomingVertices(E)), []activity.Activity[*mockActivityData]{C}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.IncomingVertices(E)), []vertex.Vertex[activity.Activity[*mockActivityData]]{C}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want, want2 := slices.Collect(p.graph.IncomingVertices(F)), []activity.Activity[*mockActivityData]{D, E}, []activity.Activity[*mockActivityData]{E, D}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
+	if v, want, want2 := slices.Collect(p.graph.IncomingVertices(F)), []vertex.Vertex[activity.Activity[*mockActivityData]]{D, E}, []vertex.Vertex[activity.Activity[*mockActivityData]]{E, D}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
 		t.Errorf("got %v want %v or %v", v, want, want2)
 	}
 
-	if v, want, want2 := slices.Collect(p.graph.OutgoingVertices(A)), []activity.Activity[*mockActivityData]{B, C}, []activity.Activity[*mockActivityData]{C, B}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
+	if v, want, want2 := slices.Collect(p.graph.OutgoingVertices(A)), []vertex.Vertex[activity.Activity[*mockActivityData]]{B, C}, []vertex.Vertex[activity.Activity[*mockActivityData]]{C, B}; (len(v) != 2) && (slices.Equal(v, want) || slices.Equal(v, want2)) {
 		t.Errorf("got %v want %v or %v", v, want, want2)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(B)), []activity.Activity[*mockActivityData]{D}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(B)), []vertex.Vertex[activity.Activity[*mockActivityData]]{D}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(C)), []activity.Activity[*mockActivityData]{E}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(C)), []vertex.Vertex[activity.Activity[*mockActivityData]]{E}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(D)), []activity.Activity[*mockActivityData]{F}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(D)), []vertex.Vertex[activity.Activity[*mockActivityData]]{F}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
-	if v, want := slices.Collect(p.graph.OutgoingVertices(E)), []activity.Activity[*mockActivityData]{F}; (len(v) != 1) && slices.Equal(v, want) {
+	if v, want := slices.Collect(p.graph.OutgoingVertices(E)), []vertex.Vertex[activity.Activity[*mockActivityData]]{F}; (len(v) != 1) && slices.Equal(v, want) {
 		t.Errorf("got %v want %v", v, want)
 	}
 	for v := range p.graph.OutgoingVertices(F) {
-		t.Errorf("got %v but %v does not have any outgoing vertices", v.Data(), F.Data())
+		t.Errorf("got %v but %v does not have any outgoing vertices", v.Value().Data(), F.Data())
 	}
 }
 
@@ -163,7 +164,7 @@ func TestInitialPredecessorActivities(t *testing.T) {
 
 	spa := slices.Collect(p.InitialPredecessorActivities())
 
-	if want := []activity.Activity[*mockActivityData]{A}; !slices.Equal(spa, want) {
+	if want := []vertex.Vertex[activity.Activity[*mockActivityData]]{A}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
@@ -191,7 +192,7 @@ func TestFinalSuccessorActivities(t *testing.T) {
 
 	spa := slices.Collect(p.FinalSuccessorActivities())
 
-	if want := []activity.Activity[*mockActivityData]{F}; !slices.Equal(spa, want) {
+	if want := []vertex.Vertex[activity.Activity[*mockActivityData]]{F}; !slices.Equal(spa, want) {
 		t.Errorf("got %v, want %v", spa, want)
 	}
 }
@@ -322,13 +323,13 @@ func TestLoneActivity(t *testing.T) {
 	foundB := false
 	foundC := false
 	for a := range p.LoneActivities() {
-		if a == A {
+		if a.Value() == A {
 			foundA = true
 		}
-		if a == B {
+		if a.Value() == B {
 			foundB = true
 		}
-		if a == C {
+		if a.Value() == C {
 			foundC = true
 		}
 	}
@@ -388,7 +389,7 @@ func TestTopologicalSorterError(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]) ([]activity.Activity[*mockActivityData], error) {
+	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]) ([]vertex.Vertex[activity.Activity[*mockActivityData]], error) {
 		return nil, fmt.Errorf("test error")
 	})
 

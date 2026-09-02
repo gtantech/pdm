@@ -1,6 +1,6 @@
 package timestamp
 
-import "github.com/gtantech/pdm/v2/interval"
+import "github.com/gtantech/pdm/interval"
 
 type Timestamp interface {
 	Early() interval.Interval

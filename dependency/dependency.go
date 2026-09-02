@@ -1,7 +1,7 @@
 package dependency
 
 import (
-	"github.com/gtantech/pdm/v2/enums"
+	"github.com/gtantech/pdm/enums"
 )
 
 type Dependency interface {

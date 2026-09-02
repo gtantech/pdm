@@ -11,20 +11,22 @@ Install via `go get`. Note that Go 1.23 or newer is required.
 
 ```sh
 # After: go mod init ...
-go get -u github.com/gtantech/pdm/v2
+go get -u github.com/gtantech/pdm
 ```
 
 ## Example
+
+```go
 package main
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/gtantech/pdm/v2"
-	"github.com/gtantech/pdm/v2/activity"
-	"github.com/gtantech/pdm/v2/dependency"
-	"github.com/gtantech/pdm/v2/enums"
+	"github.com/gtantech/pdm"
+	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/enums"
 )
 
 type Attributes struct {
