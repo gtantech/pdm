@@ -16,6 +16,7 @@ type Attributes struct {
 }
 
 func main() {
+	// create activities
 	A := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "A"})
 	B := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "B"})
 	C := activity.New(Attributes{Data: activity.NewData(2 * time.Hour), Name: "C"})
@@ -25,6 +26,7 @@ func main() {
 	G := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "G"})
 	H := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "H"})
 
+	// add activities to the table of dependencies
 	tableOfDependencies := make(map[activity.Activity[Attributes]][]activity.Activity[Attributes])
 	tableOfDependencies[A] = []activity.Activity[Attributes]{}     // A has no dependencies
 	tableOfDependencies[B] = []activity.Activity[Attributes]{A}    // B depends on A
@@ -35,6 +37,7 @@ func main() {
 	tableOfDependencies[G] = []activity.Activity[Attributes]{D, E} // G depends on D and E
 	tableOfDependencies[H] = []activity.Activity[Attributes]{F, G} // H depends on F and G
 
+	// add values from table of dependencies into pdm
 	project := pdm.New[Attributes]()
 
 	for key := range tableOfDependencies {
@@ -44,8 +47,10 @@ func main() {
 		}
 	}
 
+	// update the early/late start/finish of each activity
 	project.UpdateActivityTimestamps()
 
+	// print the early/late start/finish of each activity
 	for key := range tableOfDependencies {
 		fmt.Printf("Activity %v:\n", key.Data().Name)
 		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n", key.Timestamps().Early().Start(), key.Timestamps().Early().Finish())
