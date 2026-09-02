@@ -1,4 +1,4 @@
-package data
+package activity
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 func TestDuration(t *testing.T) {
 	duration := time.Minute * 3
 
-	d := New(duration)
+	d := NewData(duration)
 
 	if got, want := d.Duration(), duration; got != want {
 		t.Errorf("got %v, want %v", got, want)
