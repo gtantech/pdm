@@ -17,44 +17,31 @@ type Attributes struct {
 
 func main() {
 	// create activities
-	A := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "A"})
+	A := activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "A"})
 	B := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "B"})
-	C := activity.New(Attributes{Data: activity.NewData(2 * time.Hour), Name: "C"})
-	D := activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "D"})
-	E := activity.New(Attributes{Data: activity.NewData(1 * time.Hour), Name: "E"})
-	F := activity.New(Attributes{Data: activity.NewData(2 * time.Hour), Name: "F"})
-	G := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "G"})
-	H := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "H"})
+	C := activity.New(Attributes{Data: activity.NewData(5 * time.Hour), Name: "C"})
+	D := activity.New(Attributes{Data: activity.NewData(6 * time.Hour), Name: "D"})
+	E := activity.New(Attributes{Data: activity.NewData(3 * time.Hour), Name: "E"})
+	F := activity.New(Attributes{Data: activity.NewData(4 * time.Hour), Name: "F"})
 
-	// add activities to the table of dependencies
-	tableOfDependencies := make(map[activity.Activity[Attributes]][]activity.Activity[Attributes])
-	tableOfDependencies[A] = []activity.Activity[Attributes]{}     // A has no dependencies
-	tableOfDependencies[B] = []activity.Activity[Attributes]{A}    // B depends on A
-	tableOfDependencies[C] = []activity.Activity[Attributes]{A}    // C depends on A
-	tableOfDependencies[D] = []activity.Activity[Attributes]{B}    //		.
-	tableOfDependencies[E] = []activity.Activity[Attributes]{C}    //		.
-	tableOfDependencies[F] = []activity.Activity[Attributes]{C}    //		.
-	tableOfDependencies[G] = []activity.Activity[Attributes]{D, E} // G depends on D and E
-	tableOfDependencies[H] = []activity.Activity[Attributes]{F, G} // H depends on F and G
-
-	// add values from table of dependencies into pdm
+	// add dependencies to pdm
 	project := pdm.New[Attributes]()
-
-	for key := range tableOfDependencies {
-		successor := key
-		for _, predecessor := range tableOfDependencies[successor] {
-			project.AddDependency(predecessor, successor, dependency.New(enums.FS))
-		}
-	}
+	//                                                    // A has no dependencies
+	project.AddDependency(A, B, dependency.New(enums.FS)) // B depends on A
+	project.AddDependency(A, C, dependency.New(enums.FS)) // C depends on A
+	project.AddDependency(B, D, dependency.New(enums.FS)) //       .
+	project.AddDependency(C, E, dependency.New(enums.FS)) //       .
+	project.AddDependency(D, F, dependency.New(enums.FS)) // F depends on D and E
+	project.AddDependency(E, F, dependency.New(enums.FS))
 
 	// update the early/late start/finish of each activity
 	project.UpdateActivityTimestamps()
 
 	// print the early/late start/finish of each activity
-	for key := range tableOfDependencies {
-		fmt.Printf("Activity %v:\n", key.Data().Name)
-		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n", key.Timestamps().Early().Start(), key.Timestamps().Early().Finish())
-		fmt.Printf("Late Start:%-5v \tLate Finish:%-5v\n\n", key.Timestamps().Late().Start(), key.Timestamps().Late().Finish())
+	for _, activity := range []activity.Activity[Attributes]{A, B, C, D, E, F} {
+		fmt.Printf("Activity %v:\n", activity.Data().Name)
+		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n", activity.Timestamps().Early().Start(), activity.Timestamps().Early().Finish())
+		fmt.Printf("Late Start:%-5v \tLate Finish:%-5v\n\n", activity.Timestamps().Late().Start(), activity.Timestamps().Late().Finish())
 	}
 
 }
