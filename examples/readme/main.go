@@ -41,9 +41,9 @@ func main() {
 	for _, activity := range []activity.Activity[Attributes]{A, B, C, D, E, F} {
 		fmt.Printf("Activity %v:\n", activity.Data().Name)
 		fmt.Printf("Early Start:%-5v \tEarly Finish:%-5v\n",
-			activity.Timestamps().Early().Start(), activity.Timestamps().Early().Finish())
+			activity.Early().Start(), activity.Early().Finish())
 		fmt.Printf("Late Start:%-5v \tLate Finish:%-5v\n\n",
-			activity.Timestamps().Late().Start(), activity.Timestamps().Late().Finish())
+			activity.Late().Start(), activity.Late().Finish())
 	}
 
 }

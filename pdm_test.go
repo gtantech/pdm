@@ -227,74 +227,74 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if got, want := A.Timestamps().Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := A.Timestamps().Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-
-	if got, want := B.Timestamps().Early(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-	if got, want := B.Timestamps().Late(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
 
-	if got, want := C.Timestamps().Early(), interval.New(time.Duration(3*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := B.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := C.Timestamps().Late(), interval.New(time.Duration(9*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-
-	if got, want := D.Timestamps().Early(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-	if got, want := D.Timestamps().Late(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := B.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
 
-	if got, want := E.Timestamps().Early(), interval.New(time.Duration(5*time.Minute), time.Duration(6*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := C.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := E.Timestamps().Late(), interval.New(time.Duration(11*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-
-	if got, want := F.Timestamps().Early(), interval.New(time.Duration(5*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
-		t.Errorf("got:  %T %#v", got, got)
-		t.Errorf("want: %T %#v", want, want)
-	}
-	if got, want := F.Timestamps().Late(), interval.New(time.Duration(14*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := C.Late(), interval.New(time.Duration(9*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
 
-	if got, want := G.Timestamps().Early(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := D.Early(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := G.Timestamps().Late(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := D.Late(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
 
-	if got, want := H.Timestamps().Early(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := E.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(6*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := H.Timestamps().Late(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+	if got, want := E.Late(), interval.New(time.Duration(11*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := F.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := F.Late(), interval.New(time.Duration(14*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := G.Early(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := G.Late(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := H.Early(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := H.Late(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
@@ -371,11 +371,11 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if got, want := I.Timestamps().Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+	if got, want := I.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
-	if got, want := I.Timestamps().Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+	if got, want := I.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
