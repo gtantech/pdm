@@ -23,7 +23,7 @@ func TestTimestamp(t *testing.T) {
 	a := New(NewData(duration))
 	ts := timestamp.New(interval.New(time.Duration(0), time.Duration(1)), interval.New(time.Duration(0), time.Duration(1)))
 	a.UpdateTimestamps(ts)
-	if got, want := a.Timestamps(), ts; got != want {
+	if got, want := a.Timestamp, ts; got != want {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
