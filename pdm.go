@@ -112,14 +112,19 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 	})
 }
 
+func getDependency[D activity.Data](g graph.Graph[activity.Activity[D], dependency.Dependency], predecessor, successor activity.Activity[D]) dependency.Dependency {
+	dependency, ok := g.GetEdgeValue(predecessor, successor)
+	if !ok {
+		panic("expected successful depedency value assignment")
+	}
+	return dependency
+}
+
 func (p *pdm[D]) forwardPassEarlyInterval(successor activity.Activity[D]) {
 	maxStartValue := time.Duration(-1)
 	//PICK THE LARGEST VALUE FOR THE SUCCESSOR START VALUE
 	for predecessor := range p.graph.IncomingVertices(successor) {
-		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
-		if !ok {
-			panic("expected successful depedency value assignment")
-		}
+		dependency := getDependency(p.graph, predecessor, successor)
 		var successorCandidateStart time.Duration
 		if dependency.Type() == enums.FS || dependency.Type() == enums.SS {
 			successorCandidateStart = dependency.ForwardPassValue(predecessor)
@@ -140,10 +145,7 @@ func (p *pdm[D]) backwardPassLateInterval(predecessor activity.Activity[D]) {
 	minValue := time.Duration(math.MaxInt64)
 	//PICK THE SMALLEST VALUE FOR THE PREDECESSOR FINISH VALUE
 	for successor := range p.graph.OutgoingVertices(predecessor) {
-		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
-		if !ok {
-			panic("expected successful depedency value assignment")
-		}
+		dependency := getDependency(p.graph, predecessor, successor)
 		var predecessorCandidateFinish time.Duration
 		if dependency.Type() == enums.FS || dependency.Type() == enums.FF {
 			predecessorCandidateFinish = dependency.BackwardPassValue(successor)
