@@ -17,6 +17,14 @@ func TestType(t *testing.T) {
 	}
 }
 
+func TestLag(t *testing.T) {
+	lag := 5 * time.Minute
+	d := NewWithLag(enums.FS, lag)
+	if got := d.lag; got != lag {
+		t.Errorf("got %v, want %v", got, lag)
+	}
+}
+
 func TestForwardsPassValue(t *testing.T) {
 	early := interval.New(time.Duration(0), time.Duration(1))
 	late := interval.New(time.Duration(0), time.Duration(1))
