@@ -8,6 +8,7 @@ import (
 
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/toposort/v2"
 	"github.com/gtantech/toposort/v2/graph"
@@ -112,30 +113,46 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 }
 
 func (p *pdm[D]) forwardPassEarlyInterval(successor activity.Activity[D]) {
-	maxValue := time.Duration(-1)
+	maxStartValue := time.Duration(-1)
+	//PICK THE LARGEST VALUE FOR THE SUCCESSOR START VALUE
 	for predecessor := range p.graph.IncomingVertices(successor) {
 		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
 		if !ok {
 			panic("expected successful depedency value assignment")
 		}
-		if value := dependency.ForwardPassValue(predecessor); value > maxValue {
-			maxValue = value
+		var successorCandidateStart time.Duration
+		if dependency.Type() == enums.FS || dependency.Type() == enums.SS {
+			successorCandidateStart = dependency.ForwardPassValue(predecessor)
+		} else {
+			successorCandidateInterval := interval.FromFinish(dependency.ForwardPassValue(predecessor), successor.Data().Duration())
+			successorCandidateStart = successorCandidateInterval.Start()
+		}
+		if successorCandidateStart > maxStartValue {
+			maxStartValue = successorCandidateStart
 		}
 	}
-	if maxValue < 0 {
+	if maxStartValue < 0 {
 		return //max value was not updated because there was no predecessor
 	}
-	successor.UpdateEarly(interval.FromStart(maxValue, successor.Data().Duration()))
+	successor.UpdateEarly(interval.FromStart(maxStartValue, successor.Data().Duration()))
 }
 func (p *pdm[D]) backwardPassLateInterval(predecessor activity.Activity[D]) {
 	minValue := time.Duration(math.MaxInt64)
+	//PICK THE SMALLEST VALUE FOR THE PREDECESSOR FINISH VALUE
 	for successor := range p.graph.OutgoingVertices(predecessor) {
 		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
 		if !ok {
 			panic("expected successful depedency value assignment")
 		}
-		if value := dependency.BackwardPassValue(successor); value < minValue {
-			minValue = value
+		var predecessorCandidateFinish time.Duration
+		if dependency.Type() == enums.FS || dependency.Type() == enums.FF {
+			predecessorCandidateFinish = dependency.BackwardPassValue(successor)
+		} else {
+			predecessorCandidateInterval := interval.FromStart(dependency.BackwardPassValue(successor), predecessor.Data().Duration())
+			predecessorCandidateFinish = predecessorCandidateInterval.Finish()
+		}
+		if predecessorCandidateFinish < minValue {
+			minValue = predecessorCandidateFinish
 		}
 	}
 	if minValue == time.Duration(math.MaxInt64) {
