@@ -36,13 +36,13 @@ func (r *relationship) BackwardPassValue(successorTimestamp timestamp.Timestamp)
 	interval := successorTimestamp.Late()
 	switch r.kind {
 	case enums.FF:
-		return interval.Finish()
+		return interval.Finish() - r.lag
 	case enums.FS:
-		return interval.Start()
+		return interval.Start() - r.lag
 	case enums.SF:
-		return interval.Finish()
+		return interval.Finish() - r.lag
 	case enums.SS:
-		return interval.Start()
+		return interval.Start() - r.lag
 	default:
 		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
 	}
@@ -53,13 +53,13 @@ func (r *relationship) ForwardPassValue(predecessorTimestamp timestamp.Timestamp
 	interval := predecessorTimestamp.Early()
 	switch r.kind {
 	case enums.FF:
-		return interval.Finish()
+		return interval.Finish() + r.lag
 	case enums.FS:
-		return interval.Finish()
+		return interval.Finish() + r.lag
 	case enums.SF:
-		return interval.Start()
+		return interval.Start() + r.lag
 	case enums.SS:
-		return interval.Start()
+		return interval.Start() + r.lag
 	default:
 		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
 	}
