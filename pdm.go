@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/toposort/v2"
@@ -179,7 +178,8 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 
 	//update activities
 	for v := range p.graph.Vertices() {
-		v.UpdateTimestamps(timestamp.New(earlyIntervals[v], lateIntervals[v]))
+		v.UpdateEarly(earlyIntervals[v])
+		v.UpdateLate(lateIntervals[v])
 	}
 	return nil
 }
