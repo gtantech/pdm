@@ -161,7 +161,7 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	//update with lone activities
 	for a := range p.LoneActivities() {
 		i := interval.New(time.Duration(0), a.Data().Duration())
-		earlyIntervals[a] = i
+		a.UpdateEarly(i)
 		lateIntervals[a] = i
 	}
 
