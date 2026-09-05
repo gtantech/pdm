@@ -49,6 +49,14 @@ func (g *mockGraph) Vertices() func(yield func(activity.Activity[*mockActivityDa
 	return g.Graph.Vertices()
 }
 
+type mockGraphGetEdgePanic struct {
+	graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]
+}
+
+func (g *mockGraphGetEdgePanic) GetEdgeValue(origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) (dependency.Dependency, bool) {
+	return nil, false
+}
+
 func TestFields(t *testing.T) {
 	p := New[*mockActivityData]()
 	mockGraph := &mockGraph{Graph: graph.New[activity.Activity[*mockActivityData], dependency.Dependency]()}
@@ -711,4 +719,14 @@ func TestMixedRelationships(t *testing.T) {
 		t.Errorf("got:  %T %#v", got, got)
 		t.Errorf("want: %T %#v", want, want)
 	}
+}
+
+func TestGetDependency(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("failed to GetDependency did not panic")
+		}
+	}()
+	mockGraph := &mockGraphGetEdgePanic{Graph: graph.New[activity.Activity[*mockActivityData], dependency.Dependency]()}
+	getDependency(mockGraph, nil, nil)
 }
