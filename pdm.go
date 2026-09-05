@@ -57,6 +57,20 @@ func (p *pdm[D]) Activities() func(yield func(activity.Activity[D]) bool) {
 	return p.graph.Vertices()
 }
 
+func (p *pdm[D]) FreeFloat(activity activity.Activity[D]) time.Duration {
+	successorMinimumEarlyStart := time.Duration(math.MaxInt64)
+	for successor := range p.graph.OutgoingVertices(activity) {
+		if successor.Early().Start() < successorMinimumEarlyStart {
+			successorMinimumEarlyStart = successor.Early().Start()
+		}
+	}
+	if successorMinimumEarlyStart == time.Duration(math.MaxInt64) {
+		//no outgoing vertices
+		return time.Duration(0) //return 0 to satisfy (free float <= total float)
+	}
+	return successorMinimumEarlyStart - activity.Early().Start() - activity.Data().Duration()
+}
+
 func (p *pdm[D]) filter(seq iter.Seq[activity.Activity[D]], predicate func(activity.Activity[D]) bool) iter.Seq[activity.Activity[D]] {
 	return func(yield func(activity.Activity[D]) bool) {
 		seq(func(value activity.Activity[D]) bool {
