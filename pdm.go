@@ -24,6 +24,7 @@ type PDM[D activity.Data] interface {
 	LoneActivities() func(yield func(activity.Activity[D]) bool)
 	FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool)
 	UpdateActivityTimestamps() error
+	FreeFloat(activity activity.Activity[D]) time.Duration
 }
 
 var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements PDM at compile time
