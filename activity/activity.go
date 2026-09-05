@@ -1,6 +1,8 @@
 package activity
 
 import (
+	"time"
+
 	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/interval"
 )
@@ -8,11 +10,17 @@ import (
 type Activity[D Data] interface {
 	Data() D
 	timestamp.Timestamp //timestamp relative to the start (time at 0)
+	TotalFloat() time.Duration
 }
 
 type activity[D Data] struct {
 	data                D
 	timestamp.Timestamp //timestamp relative to the start (time at 0)
+}
+
+// TotalFloat implements [Activity].
+func (a *activity[D]) TotalFloat() time.Duration {
+	return a.Late().Start() - a.Early().Start()
 }
 
 func New[D Data](data D) *activity[D] {
