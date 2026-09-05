@@ -127,6 +127,22 @@ func (p *pdm[D]) forwardPassEarlyInterval(successor activity.Activity[D]) {
 	}
 	successor.UpdateEarly(interval.FromStart(maxValue, successor.Data().Duration()))
 }
+func (p *pdm[D]) backwardPassLateInterval(predecessor activity.Activity[D]) {
+	minValue := time.Duration(math.MaxInt64)
+	for successor := range p.graph.OutgoingVertices(predecessor) {
+		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
+		if !ok {
+			panic("expected successful depedency value assignment")
+		}
+		if value := dependency.BackwardPassValue(successor); value < minValue {
+			minValue = value
+		}
+	}
+	if minValue == time.Duration(math.MaxInt64) {
+		return //min value was not updated because there was no successor
+	}
+	predecessor.UpdateLate(interval.FromFinish(minValue, predecessor.Data().Duration()))
+}
 
 // returns a map of activities to their early start and early finish values
 func (p *pdm[D]) forwardPass(topologicalSortedOrder []activity.Activity[D]) {
@@ -138,6 +154,20 @@ func (p *pdm[D]) forwardPass(topologicalSortedOrder []activity.Activity[D]) {
 	}
 	for _, v := range topologicalSortedOrder[countInitial:] { //skip initial activities
 		p.forwardPassEarlyInterval(v)
+	}
+}
+
+func (p *pdm[D]) backwardPass(topologicalSortedOrder []activity.Activity[D]) {
+	//initialize all final nodes
+	order := topologicalSortedOrder
+	slices.Reverse(order)
+	countFinal := 0
+	for a := range p.FinalSuccessorActivities() {
+		a.UpdateLate(interval.FromFinish(a.Early().Finish(), a.Data().Duration()))
+		countFinal++
+	}
+	for _, v := range order[countFinal:] { //skip final activities
+		p.backwardPassLateInterval(v)
 	}
 }
 
@@ -156,41 +186,13 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	}
 
 	// backwards pass
-	lateIntervals := make(map[activity.Activity[D]]interval.Interval)
+	p.backwardPass(order)
 
 	//update with lone activities
 	for a := range p.LoneActivities() {
 		i := interval.New(time.Duration(0), a.Data().Duration())
 		a.UpdateEarly(i)
-		lateIntervals[a] = i
-	}
-
-	// initialize all end nodes
-	for a := range p.FinalSuccessorActivities() {
-		earlyInterval := earlyIntervals[a]
-		lateFinish := earlyInterval.Finish()
-		lateStart := lateFinish - a.Data().Duration()
-		lateIntervals[a] = interval.New(lateStart, lateFinish)
-	}
-
-	slices.Reverse(order)
-	for _, v := range order {
-		if _, ok := lateIntervals[v]; !ok {
-			//!ok -> no late start/finish value for this activity
-			//get successor
-			minLateStartSuccessor := time.Duration(math.MaxInt64)
-			for successor := range p.graph.OutgoingVertices(v) {
-				if lateStart := lateIntervals[successor].Start(); lateStart < minLateStartSuccessor {
-					minLateStartSuccessor = lateStart
-				}
-			}
-			lateIntervals[v] = interval.New(minLateStartSuccessor-v.Data().Duration(), minLateStartSuccessor)
-		}
-	}
-
-	//update activities
-	for v := range p.graph.Vertices() {
-		v.UpdateLate(lateIntervals[v])
+		a.UpdateLate(i)
 	}
 	return nil
 }
