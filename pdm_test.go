@@ -396,3 +396,319 @@ func TestTopologicalSorterError(t *testing.T) {
 		t.Errorf("expected error")
 	}
 }
+
+func TestStartToStartRelationship(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*2))
+	B := activity.New(NewMockActivityData("B", time.Minute*3))
+	C := activity.New(NewMockActivityData("C", time.Minute*4))
+	D := activity.New(NewMockActivityData("D", time.Minute*3))
+
+	p.AddDependency(A, B, dependency.New(enums.SS))
+	p.AddDependency(B, C, dependency.New(enums.FS))
+	p.AddDependency(C, D, dependency.NewWithLag(enums.SS, time.Minute*2))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*2)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*2)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(0*time.Minute), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(0*time.Minute), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := D.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(8*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := D.Late(), interval.New(time.Duration(5*time.Minute), time.Duration(8*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+}
+
+func TestFinishToFinishRelationship(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*2))
+	C := activity.New(NewMockActivityData("C", time.Minute*3))
+	D := activity.New(NewMockActivityData("D", time.Minute*3))
+
+	p.AddDependency(A, B, dependency.New(enums.FF))
+	p.AddDependency(B, C, dependency.NewWithLag(enums.FF, time.Minute*2))
+	p.AddDependency(C, D, dependency.New(enums.FS))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(1*time.Minute), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(1*time.Minute), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(2*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(2*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := D.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(8*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := D.Late(), interval.New(time.Duration(5*time.Minute), time.Duration(8*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+}
+
+func TestStartToFinishRelationship(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*3))
+	C := activity.New(NewMockActivityData("C", time.Minute*4))
+
+	p.AddDependency(A, B, dependency.NewWithLag(enums.SF, time.Minute*5))
+	p.AddDependency(B, C, dependency.New(enums.FS))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(2*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(2*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(9*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(5*time.Minute), time.Duration(9*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
+
+func TestFinishToStartRelationship(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*3))
+
+	p.AddDependency(A, B, dependency.New(enums.FS))
+	p.AddDependency(B, C, dependency.NewWithLag(enums.FS, time.Minute*2))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(9*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(9*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
+
+func TestMixedRelationships(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*2))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*4))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+
+	p.AddDependency(A, B, dependency.NewWithLag(enums.FS, time.Minute*2))
+	p.AddDependency(A, C, dependency.New(enums.SS))
+	p.AddDependency(B, D, dependency.NewWithLag(enums.SS, time.Minute*1))
+	p.AddDependency(C, E, dependency.NewWithLag(enums.SF, time.Minute*3))
+	p.AddDependency(C, F, dependency.NewWithLag(enums.FF, time.Minute*3))
+	p.AddDependency(D, G, dependency.NewWithLag(enums.SS, time.Minute*1))
+	p.AddDependency(E, G, dependency.New(enums.FS))
+	p.AddDependency(F, H, dependency.NewWithLag(enums.SF, time.Minute*2))
+	p.AddDependency(G, H, dependency.New(enums.FS))
+
+	err := p.UpdateActivityTimestamps()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(5*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(0*time.Minute), time.Duration(2*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(4*time.Minute), time.Duration(6*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := D.Early(), interval.New(time.Duration(6*time.Minute), time.Duration(10*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := D.Late(), interval.New(time.Duration(6*time.Minute), time.Duration(10*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := E.Early(), interval.New(time.Duration(2*time.Minute), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := E.Late(), interval.New(time.Duration(6*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := F.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := F.Late(), interval.New(time.Duration(12*time.Minute), time.Duration(14*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := G.Early(), interval.New(time.Duration(7*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := G.Late(), interval.New(time.Duration(7*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := H.Early(), interval.New(time.Duration(11*time.Minute), time.Duration(14*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := H.Late(), interval.New(time.Duration(11*time.Minute), time.Duration(14*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
