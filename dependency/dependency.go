@@ -1,13 +1,17 @@
 package dependency
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/enums"
 )
 
 type Dependency interface {
 	Type() enums.DependencyType
+	ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration
+	BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration
 }
 
 type relationship struct {
@@ -25,4 +29,38 @@ func NewWithLag(kind enums.DependencyType, lag time.Duration) *relationship {
 
 func (r *relationship) Type() enums.DependencyType {
 	return r.kind
+}
+
+// BackwardPassValue implements [Dependency].
+func (r *relationship) BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration {
+	interval := successorTimestamp.Late()
+	switch r.kind {
+	case enums.FF:
+		return interval.Finish() - r.lag
+	case enums.FS:
+		return interval.Start() - r.lag
+	case enums.SF:
+		return interval.Finish() - r.lag
+	case enums.SS:
+		return interval.Start() - r.lag
+	default:
+		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
+	}
+}
+
+// ForwardPassValue implements [Dependency].
+func (r *relationship) ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration {
+	interval := predecessorTimestamp.Early()
+	switch r.kind {
+	case enums.FF:
+		return interval.Finish() + r.lag
+	case enums.FS:
+		return interval.Finish() + r.lag
+	case enums.SF:
+		return interval.Start() + r.lag
+	case enums.SS:
+		return interval.Start() + r.lag
+	default:
+		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
+	}
 }

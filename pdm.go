@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/activity/timestamp"
 	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/toposort/v2"
 	"github.com/gtantech/toposort/v2/graph"
@@ -112,27 +112,82 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 	})
 }
 
-// returns a map of activities to their early start and early finish values
-func (p *pdm[D]) earlyIntervals(topologicalSortedOrder []activity.Activity[D]) map[activity.Activity[D]]interval.Interval {
-	earlyInterval := make(map[activity.Activity[D]]interval.Interval)
-	//initialize all start nodes
-	for a := range p.InitialPredecessorActivities() {
-		earlyInterval[a] = interval.New(time.Duration(0), a.Data().Duration())
+func getDependency[D activity.Data](g graph.Graph[activity.Activity[D], dependency.Dependency], predecessor, successor activity.Activity[D]) dependency.Dependency {
+	dependency, ok := g.GetEdgeValue(predecessor, successor)
+	if !ok {
+		panic("expected successful depedency value assignment")
 	}
-	for _, v := range topologicalSortedOrder {
-		if _, ok := earlyInterval[v]; !ok {
-			//!ok -> no early start/finish value for this activity
-			//get predecessor
-			maxEarlyFinishPredecessor := time.Duration(0)
-			for predecessor := range p.graph.IncomingVertices(v) {
-				if earlyFinish := earlyInterval[predecessor].Finish(); earlyFinish > maxEarlyFinishPredecessor {
-					maxEarlyFinishPredecessor = earlyFinish
-				}
-			}
-			earlyInterval[v] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor+v.Data().Duration())
+	return dependency
+}
+
+func (p *pdm[D]) forwardPassEarlyInterval(successor activity.Activity[D]) {
+	maxStartValue := time.Duration(-1)
+	//PICK THE LARGEST VALUE FOR THE SUCCESSOR START VALUE
+	for predecessor := range p.graph.IncomingVertices(successor) {
+		dependency := getDependency(p.graph, predecessor, successor)
+		var successorCandidateStart time.Duration
+		if dependency.Type() == enums.FS || dependency.Type() == enums.SS {
+			successorCandidateStart = dependency.ForwardPassValue(predecessor)
+		} else {
+			successorCandidateInterval := interval.FromFinish(dependency.ForwardPassValue(predecessor), successor.Data().Duration())
+			successorCandidateStart = successorCandidateInterval.Start()
+		}
+		if successorCandidateStart > maxStartValue {
+			maxStartValue = successorCandidateStart
 		}
 	}
-	return earlyInterval
+	if maxStartValue < 0 {
+		return //max value was not updated because there was no predecessor
+	}
+	successor.UpdateEarly(interval.FromStart(maxStartValue, successor.Data().Duration()))
+}
+func (p *pdm[D]) backwardPassLateInterval(predecessor activity.Activity[D]) {
+	minValue := time.Duration(math.MaxInt64)
+	//PICK THE SMALLEST VALUE FOR THE PREDECESSOR FINISH VALUE
+	for successor := range p.graph.OutgoingVertices(predecessor) {
+		dependency := getDependency(p.graph, predecessor, successor)
+		var predecessorCandidateFinish time.Duration
+		if dependency.Type() == enums.FS || dependency.Type() == enums.FF {
+			predecessorCandidateFinish = dependency.BackwardPassValue(successor)
+		} else {
+			predecessorCandidateInterval := interval.FromStart(dependency.BackwardPassValue(successor), predecessor.Data().Duration())
+			predecessorCandidateFinish = predecessorCandidateInterval.Finish()
+		}
+		if predecessorCandidateFinish < minValue {
+			minValue = predecessorCandidateFinish
+		}
+	}
+	if minValue == time.Duration(math.MaxInt64) {
+		return //min value was not updated because there was no successor
+	}
+	predecessor.UpdateLate(interval.FromFinish(minValue, predecessor.Data().Duration()))
+}
+
+// returns a map of activities to their early start and early finish values
+func (p *pdm[D]) forwardPass(topologicalSortedOrder []activity.Activity[D]) {
+	//initialize all start nodes
+	countInitial := 0
+	for a := range p.InitialPredecessorActivities() {
+		a.UpdateEarly(interval.New(time.Duration(0), a.Data().Duration()))
+		countInitial++
+	}
+	for _, v := range topologicalSortedOrder[countInitial:] { //skip initial activities
+		p.forwardPassEarlyInterval(v)
+	}
+}
+
+func (p *pdm[D]) backwardPass(topologicalSortedOrder []activity.Activity[D]) {
+	//initialize all final nodes
+	order := topologicalSortedOrder
+	slices.Reverse(order)
+	countFinal := 0
+	for a := range p.FinalSuccessorActivities() {
+		a.UpdateLate(interval.FromFinish(a.Early().Finish(), a.Data().Duration()))
+		countFinal++
+	}
+	for _, v := range order[countFinal:] { //skip final activities
+		p.backwardPassLateInterval(v)
+	}
 }
 
 func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], dependency.Dependency]) ([]activity.Activity[D], error)) error {
@@ -142,44 +197,21 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	}
 
 	// forwards pass
-	earlyIntervals := p.earlyIntervals(order)
+	p.forwardPass(order)
+
+	earlyIntervals := make(map[activity.Activity[D]]interval.Interval)
+	for _, a := range order {
+		earlyIntervals[a] = a.Early()
+	}
 
 	// backwards pass
-	lateIntervals := make(map[activity.Activity[D]]interval.Interval)
+	p.backwardPass(order)
 
 	//update with lone activities
 	for a := range p.LoneActivities() {
 		i := interval.New(time.Duration(0), a.Data().Duration())
-		earlyIntervals[a] = i
-		lateIntervals[a] = i
-	}
-
-	// initialize all end nodes
-	for a := range p.FinalSuccessorActivities() {
-		earlyInterval := earlyIntervals[a]
-		lateFinish := earlyInterval.Finish()
-		lateStart := lateFinish - a.Data().Duration()
-		lateIntervals[a] = interval.New(lateStart, lateFinish)
-	}
-
-	slices.Reverse(order)
-	for _, v := range order {
-		if _, ok := lateIntervals[v]; !ok {
-			//!ok -> no late start/finish value for this activity
-			//get successor
-			minLateStartSuccessor := time.Duration(math.MaxInt64)
-			for successor := range p.graph.OutgoingVertices(v) {
-				if lateStart := lateIntervals[successor].Start(); lateStart < minLateStartSuccessor {
-					minLateStartSuccessor = lateStart
-				}
-			}
-			lateIntervals[v] = interval.New(minLateStartSuccessor-v.Data().Duration(), minLateStartSuccessor)
-		}
-	}
-
-	//update activities
-	for v := range p.graph.Vertices() {
-		v.UpdateTimestamps(timestamp.New(earlyIntervals[v], lateIntervals[v]))
+		a.UpdateEarly(i)
+		a.UpdateLate(i)
 	}
 	return nil
 }

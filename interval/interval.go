@@ -16,6 +16,14 @@ func New(start time.Duration, finish time.Duration) *interval {
 	return &interval{start: start, finish: finish}
 }
 
+func FromStart(start time.Duration, duration time.Duration) *interval {
+	return &interval{start: start, finish: start + duration}
+}
+
+func FromFinish(finish time.Duration, duration time.Duration) *interval {
+	return &interval{start: finish - duration, finish: finish}
+}
+
 // Finish implements [ActivityInterval].
 func (i *interval) Finish() time.Duration {
 	return i.finish
