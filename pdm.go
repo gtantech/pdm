@@ -111,27 +111,34 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 	})
 }
 
-// returns a map of activities to their early start and early finish values
-func (p *pdm[D]) earlyIntervals(topologicalSortedOrder []activity.Activity[D]) map[activity.Activity[D]]interval.Interval {
-	earlyInterval := make(map[activity.Activity[D]]interval.Interval)
-	//initialize all start nodes
-	for a := range p.InitialPredecessorActivities() {
-		earlyInterval[a] = interval.New(time.Duration(0), a.Data().Duration())
-	}
-	for _, v := range topologicalSortedOrder {
-		if _, ok := earlyInterval[v]; !ok {
-			//!ok -> no early start/finish value for this activity
-			//get predecessor
-			maxEarlyFinishPredecessor := time.Duration(0)
-			for predecessor := range p.graph.IncomingVertices(v) {
-				if earlyFinish := earlyInterval[predecessor].Finish(); earlyFinish > maxEarlyFinishPredecessor {
-					maxEarlyFinishPredecessor = earlyFinish
-				}
-			}
-			earlyInterval[v] = interval.New(maxEarlyFinishPredecessor, maxEarlyFinishPredecessor+v.Data().Duration())
+func (p *pdm[D]) forwardPassEarlyInterval(successor activity.Activity[D]) {
+	maxValue := time.Duration(-1)
+	for predecessor := range p.graph.IncomingVertices(successor) {
+		dependency, ok := p.graph.GetEdgeValue(predecessor, successor)
+		if !ok {
+			panic("expected successful depedency value assignment")
+		}
+		if value := dependency.ForwardPassValue(predecessor); value > maxValue {
+			maxValue = value
 		}
 	}
-	return earlyInterval
+	if maxValue < 0 {
+		return //max value was not updated because there was no predecessor
+	}
+	successor.UpdateEarly(interval.FromStart(maxValue, successor.Data().Duration()))
+}
+
+// returns a map of activities to their early start and early finish values
+func (p *pdm[D]) forwardPass(topologicalSortedOrder []activity.Activity[D]) {
+	//initialize all start nodes
+	countInitial := 0
+	for a := range p.InitialPredecessorActivities() {
+		a.UpdateEarly(interval.New(time.Duration(0), a.Data().Duration()))
+		countInitial++
+	}
+	for _, v := range topologicalSortedOrder[countInitial:] { //skip initial activities
+		p.forwardPassEarlyInterval(v)
+	}
 }
 
 func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], dependency.Dependency]) ([]activity.Activity[D], error)) error {
@@ -141,7 +148,12 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	}
 
 	// forwards pass
-	earlyIntervals := p.earlyIntervals(order)
+	p.forwardPass(order)
+
+	earlyIntervals := make(map[activity.Activity[D]]interval.Interval)
+	for _, a := range order {
+		earlyIntervals[a] = a.Early()
+	}
 
 	// backwards pass
 	lateIntervals := make(map[activity.Activity[D]]interval.Interval)
@@ -178,7 +190,6 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 
 	//update activities
 	for v := range p.graph.Vertices() {
-		v.UpdateEarly(earlyIntervals[v])
 		v.UpdateLate(lateIntervals[v])
 	}
 	return nil
