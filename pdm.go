@@ -74,16 +74,12 @@ func (p *pdm[D]) InitialPredecessorActivities() func(yield func(activity.Activit
 			// starting predecessor should not have any incoming vertex, return false if it does
 			return false
 		}
-		hasOutgoingVertices := false
 
 		for range p.graph.OutgoingVertices(v) {
 			// starting predecessor should have at least 1 outgoing vertex
-			if hasOutgoingVertices {
-				break
-			}
-			hasOutgoingVertices = true
+			return true
 		}
-		return hasOutgoingVertices
+		return false
 	})
 }
 
@@ -107,16 +103,12 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 			// starting successor should not have any outgoing vertex, return false if it does
 			return false
 		}
-		hasIncomingVertices := false
 
 		for range p.graph.IncomingVertices(v) {
-			// starting predecessor should have at least 1 outgoing vertex
-			if hasIncomingVertices {
-				break
-			}
-			hasIncomingVertices = true
+			// starting predecessor should have at least 1 incoming vertex
+			return true
 		}
-		return hasIncomingVertices
+		return false
 	})
 }
 
