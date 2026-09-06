@@ -5,6 +5,7 @@ This is a Go package that provides an implementation to help plan dependencies o
 
 ## Table of Contents
 - [Install](#install)
+- [Features](#features)
 - [Example](#example)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -16,6 +17,12 @@ Install via `go get`. Note that Go 1.23 or newer is required.
 # After: go mod init ...
 go get -u github.com/gtantech/pdm
 ```
+## Features
+* Critical activity identification
+* Early Start, Early Finish, Late Start, Late Finish calculations of each activity
+* Total Float and Free Float calculations of each activity
+* Determining which activities are start, middle or final, or are isolated
+* Cycle detection (circular dependencies)
 
 ## Example
 
