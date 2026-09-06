@@ -900,7 +900,10 @@ func TestAddDependencies(t *testing.T) {
 	d8 := dependency.New(F, H, relationship.New(enums.FS))
 	d9 := dependency.New(G, H, relationship.New(enums.FS))
 
-	p.AddDependencies([]dependency.Dependency[*mockActivityData]{d1, d2, d3, d4, d5, d6, d7, d8, d9})
+	err := p.AddDependencies([]dependency.Dependency[*mockActivityData]{d1, d2, d3, d4, d5, d6, d7, d8, d9})
+	if err != nil {
+		t.Errorf("unexpected error occurred: %v", err)
+	}
 
 	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
 		t.Errorf("got:  %T %#v", got, got)
