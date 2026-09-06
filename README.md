@@ -5,6 +5,7 @@ This is a Go package that provides an implementation to help plan dependencies o
 - [Install](#install)
 - [Example](#example)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## Install
 Install via `go get`. Note that Go 1.23 or newer is required.
@@ -72,6 +73,11 @@ func main() {
 ## License
 
 Licensed under [MIT License](./LICENSE)
+
+## Acknowledgements
+
+* Engineer4Free [youtube playlist](https://www.youtube.com/@Engineer4Free/playlists)
+	* A big thank you to Engineer4Free ([youtube](https://www.youtube.com/@Engineer4Free)) for their amazing course in project management. Most of the test cases used in this project were from their worked examples in their project management [playlist](https://www.youtube.com/@Engineer4Free/playlists).
 
 ## Thanks!
 
