@@ -8,14 +8,14 @@ import (
 
 type DependencyTable[D activity.Data] interface {
 	AddRow(successor activity.Activity[D])
-	GetRow(successor activity.Activity[D]) ([]activity.Activity[D], bool)
+	GetRow(successor activity.Activity[D]) ([]PredecessorDependency[D], bool)
 	GetActivities() func(yield func(activity.Activity[D]) bool)
-	UpdatePredecessors(successor activity.Activity[D], predecessors []activity.Activity[D])
+	UpdatePredecessors(successor activity.Activity[D], predecessors []PredecessorDependency[D])
 	DeleteRow(successor activity.Activity[D])
 }
 
 type depedencyTable[D activity.Data] struct {
-	table map[activity.Activity[D]][]activity.Activity[D]
+	table map[activity.Activity[D]][]PredecessorDependency[D]
 }
 
 // GetActivities implements [DependencyTable].
@@ -24,14 +24,14 @@ func (d *depedencyTable[D]) GetActivities() func(yield func(activity.Activity[D]
 }
 
 // GetRow implements [DependencyTable].
-func (d *depedencyTable[D]) GetRow(successor activity.Activity[D]) ([]activity.Activity[D], bool) {
+func (d *depedencyTable[D]) GetRow(successor activity.Activity[D]) ([]PredecessorDependency[D], bool) {
 	predecessors, ok := d.table[successor]
 	return predecessors, ok
 }
 
 // AddRow implements [DependencyTable].
 func (d *depedencyTable[D]) AddRow(successor activity.Activity[D]) {
-	d.table[successor] = []activity.Activity[D]{}
+	d.table[successor] = []PredecessorDependency[D]{}
 }
 
 // DeleteRow implements [DependencyTable].
@@ -40,17 +40,17 @@ func (d *depedencyTable[D]) DeleteRow(successor activity.Activity[D]) {
 }
 
 // UpdatePredecessors implements [DependencyTable].
-func (d *depedencyTable[D]) UpdatePredecessors(successor activity.Activity[D], predecessors []activity.Activity[D]) {
+func (d *depedencyTable[D]) UpdatePredecessors(successor activity.Activity[D], predecessors []PredecessorDependency[D]) {
 	for _, a := range predecessors {
-		if _, ok := d.table[a]; !ok {
-			d.AddRow(a)
+		if _, ok := d.table[a.Predecessor()]; !ok {
+			d.AddRow(a.Predecessor())
 		}
 	}
 	d.table[successor] = predecessors
 }
 
 func New[D activity.Data]() *depedencyTable[D] {
-	return &depedencyTable[D]{table: map[activity.Activity[D]][]activity.Activity[D]{}}
+	return &depedencyTable[D]{table: map[activity.Activity[D]][]PredecessorDependency[D]{}}
 }
 
 var _ DependencyTable[activity.Data] = (*depedencyTable[activity.Data])(nil) //ensures ExampleStruct implements ExampleInterface at compile time

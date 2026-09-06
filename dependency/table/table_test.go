@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/relationship"
 )
 
 func TestAddRow(t *testing.T) {
@@ -25,7 +27,7 @@ func TestGetRow(t *testing.T) {
 	A := activity.New(activity.Data(activity.NewData(0)))
 	B := activity.New(activity.Data(activity.NewData(0)))
 	C := activity.New(activity.Data(activity.NewData(0)))
-	inputRow := []activity.Activity[activity.Data]{B, C}
+	inputRow := []PredecessorDependency[activity.Data]{NewPredecessorDependency(B, relationship.New(enums.FS)), NewPredecessorDependency(C, relationship.New(enums.FS))}
 	tbl.table[A] = inputRow
 	row, ok := tbl.GetRow(A)
 	if !ok {
@@ -41,7 +43,7 @@ func TestDeleteRow(t *testing.T) {
 	A := activity.New(activity.Data(activity.NewData(0)))
 	B := activity.New(activity.Data(activity.NewData(0)))
 	C := activity.New(activity.Data(activity.NewData(0)))
-	inputRow := []activity.Activity[activity.Data]{B, C}
+	inputRow := []PredecessorDependency[activity.Data]{NewPredecessorDependency(B, relationship.New(enums.FS)), NewPredecessorDependency(C, relationship.New(enums.FS))}
 	tbl.table[A] = inputRow
 	_, ok := tbl.GetRow(A)
 	if !ok {
@@ -60,7 +62,7 @@ func TestUpdatePredecessors(t *testing.T) {
 	B := activity.New(activity.Data(activity.NewData(0)))
 	C := activity.New(activity.Data(activity.NewData(0)))
 	D := activity.New(activity.Data(activity.NewData(0)))
-	inputRow := []activity.Activity[activity.Data]{B, C}
+	inputRow := []PredecessorDependency[activity.Data]{NewPredecessorDependency(B, relationship.New(enums.FS)), NewPredecessorDependency(C, relationship.New(enums.FS))}
 	tbl.table[A] = inputRow
 	row, ok := tbl.GetRow(A)
 	if !ok {
@@ -70,7 +72,7 @@ func TestUpdatePredecessors(t *testing.T) {
 		t.Errorf("got %v, want %v", row, inputRow)
 	}
 
-	newInputRow := []activity.Activity[activity.Data]{B, C, D}
+	newInputRow := []PredecessorDependency[activity.Data]{NewPredecessorDependency(B, relationship.New(enums.FS)), NewPredecessorDependency(C, relationship.New(enums.FS)), NewPredecessorDependency(D, relationship.New(enums.FS))}
 
 	tbl.UpdatePredecessors(A, newInputRow)
 
@@ -88,7 +90,7 @@ func TestGetActivities(t *testing.T) {
 	A := activity.New(activity.Data(activity.NewData(0)))
 	B := activity.New(activity.Data(activity.NewData(0)))
 	C := activity.New(activity.Data(activity.NewData(0)))
-	inputRow := []activity.Activity[activity.Data]{B, C}
+	inputRow := []PredecessorDependency[activity.Data]{NewPredecessorDependency(B, relationship.New(enums.FS)), NewPredecessorDependency(C, relationship.New(enums.FS))}
 	activities := []activity.Activity[activity.Data]{A, B, C}
 	tbl.UpdatePredecessors(A, inputRow)
 	if got, want := len(slices.Collect(tbl.GetActivities())), 3; got != want {
