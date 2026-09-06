@@ -1,6 +1,7 @@
 package pdm
 
 import (
+	"errors"
 	"iter"
 	"math"
 	"slices"
@@ -254,6 +255,10 @@ func (p *pdm[D]) backwardPass(topologicalSortedOrder []activity.Activity[D]) {
 func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], relationship.Relationship]) ([]activity.Activity[D], error)) error {
 	order, err := topologicalSorter(p.graph)
 	if err != nil {
+		var e *toposort.CycleDetectedError[activity.Activity[D], relationship.Relationship]
+		if errors.As(err, &e) {
+			return &CycleDetectedError[activity.Activity[D], relationship.Relationship]{Predecessor: e.Origin, Successor: e.Destination, Relationship: e.EdgeValue}
+		}
 		return err
 	}
 
