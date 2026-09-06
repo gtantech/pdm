@@ -1,6 +1,7 @@
 package pdm
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -12,6 +13,7 @@ import (
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/pdm/relationship"
+	"github.com/gtantech/toposort/v2"
 	"github.com/gtantech/toposort/v2/graph"
 )
 
@@ -454,6 +456,42 @@ func TestTopologicalSorterError(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("expected error")
+	}
+}
+
+func TestTopologicalSorterCycleError(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+	d := relationship.New(enums.FS)
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[*mockActivityData], relationship.Relationship]) ([]activity.Activity[*mockActivityData], error) {
+		return nil, &toposort.CycleDetectedError[activity.Activity[*mockActivityData], relationship.Relationship]{Origin: A, Destination: B, EdgeValue: d}
+	})
+
+	if err == nil {
+		t.Errorf("expected error")
+	}
+
+	var e *CycleDetectedError[activity.Activity[*mockActivityData], relationship.Relationship]
+
+	if !errors.As(err, &e) {
+		t.Errorf("expected CycleDetectedError type")
+	}
+
+	if got, want := e.Predecessor, A; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := e.Successor, B; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := e.Relationship, d; got != want {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
 
