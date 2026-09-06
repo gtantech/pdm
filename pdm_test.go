@@ -807,3 +807,68 @@ func TestTotalFloat(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestCriticalActivities(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+
+	p.AddDependency(A, B, dependency.New(enums.FS))
+	p.AddDependency(A, C, dependency.New(enums.FS))
+	p.AddDependency(B, D, dependency.New(enums.FS))
+	p.AddDependency(C, E, dependency.New(enums.FS))
+	p.AddDependency(C, F, dependency.New(enums.FS))
+	p.AddDependency(D, G, dependency.New(enums.FS))
+	p.AddDependency(E, G, dependency.New(enums.FS))
+	p.AddDependency(F, H, dependency.New(enums.FS))
+	p.AddDependency(G, H, dependency.New(enums.FS))
+
+	p.UpdateActivityTimestamps()
+
+	crticialActivities := slices.Collect(p.CriticalActivities(0))
+
+	if got, want := len(crticialActivities), 5; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(crticialActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == A
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(crticialActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == B
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(crticialActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == D
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(crticialActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == G
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(crticialActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == H
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}

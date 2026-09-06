@@ -23,6 +23,7 @@ type PDM[D activity.Data] interface {
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
 	LoneActivities() func(yield func(activity.Activity[D]) bool)
 	FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool)
+	CriticalActivities(threshold time.Duration) func(yield func(activity.Activity[D]) bool)
 	UpdateActivityTimestamps() error
 	FreeFloat(activity activity.Activity[D]) time.Duration
 	TotalFloat(activity activity.Activity[D]) time.Duration
@@ -32,6 +33,14 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], dependency.Dependency]
+}
+
+// CriticalActivities implements [PDM].
+// threshold is the value at which if the total float of an activity is less than equal to the threshold value, it is considered critical.
+func (p *pdm[D]) CriticalActivities(threshold time.Duration) func(yield func(activity.Activity[D]) bool) {
+	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
+		return v.TotalFloat() <= threshold
+	})
 }
 
 // TotalFloat implements [PDM].
