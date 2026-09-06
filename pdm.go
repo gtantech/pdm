@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/pdm/relationship"
 	"github.com/gtantech/toposort/v2"
 	"github.com/gtantech/toposort/v2/graph"
 )
@@ -17,7 +17,7 @@ import (
 type PDM[D activity.Data] interface {
 	AddActivity(activity activity.Activity[D]) activity.Activity[D]
 	RemoveActivity(activity activity.Activity[D])
-	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency)
+	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship)
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 	Activities() func(yield func(activity.Activity[D]) bool)
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
@@ -32,7 +32,7 @@ type PDM[D activity.Data] interface {
 var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements PDM at compile time
 
 type pdm[D activity.Data] struct {
-	graph graph.Graph[activity.Activity[D], dependency.Dependency]
+	graph graph.Graph[activity.Activity[D], relationship.Relationship]
 }
 
 // CriticalActivities implements [PDM].
@@ -49,7 +49,7 @@ func (p *pdm[D]) TotalFloat(activity activity.Activity[D]) time.Duration {
 }
 
 func New[D activity.Data]() *pdm[D] {
-	return &pdm[D]{graph: graph.New[activity.Activity[D], dependency.Dependency]()}
+	return &pdm[D]{graph: graph.New[activity.Activity[D], relationship.Relationship]()}
 }
 
 func (p *pdm[D]) AddActivity(activity activity.Activity[D]) activity.Activity[D] {
@@ -61,7 +61,7 @@ func (p *pdm[D]) RemoveActivity(activity activity.Activity[D]) {
 	p.graph.RemoveVertex(activity)
 }
 
-func (p *pdm[D]) AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia dependency.Dependency) {
+func (p *pdm[D]) AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship) {
 	p.graph.AddEdge(dependsVia, predecessor, successor)
 }
 
@@ -142,7 +142,7 @@ func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]
 	})
 }
 
-func getDependency[D activity.Data](g graph.Graph[activity.Activity[D], dependency.Dependency], predecessor, successor activity.Activity[D]) dependency.Dependency {
+func getDependency[D activity.Data](g graph.Graph[activity.Activity[D], relationship.Relationship], predecessor, successor activity.Activity[D]) relationship.Relationship {
 	dependency, ok := g.GetEdgeValue(predecessor, successor)
 	if !ok {
 		panic("expected successful depedency value assignment")
@@ -220,7 +220,7 @@ func (p *pdm[D]) backwardPass(topologicalSortedOrder []activity.Activity[D]) {
 	}
 }
 
-func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], dependency.Dependency]) ([]activity.Activity[D], error)) error {
+func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[activity.Activity[D], relationship.Relationship]) ([]activity.Activity[D], error)) error {
 	order, err := topologicalSorter(p.graph)
 	if err != nil {
 		return err

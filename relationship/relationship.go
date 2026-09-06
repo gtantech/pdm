@@ -1,4 +1,4 @@
-package dependency
+package relationship
 
 import (
 	"fmt"
@@ -8,30 +8,30 @@ import (
 	"github.com/gtantech/pdm/enums"
 )
 
-type Dependency interface {
-	Type() enums.DependencyType
+type Relationship interface {
+	Type() enums.RelationshipType
 	ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration
 	BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration
 }
 
 type relationship struct {
-	kind enums.DependencyType
+	kind enums.RelationshipType
 	lag  time.Duration
 }
 
-func New(kind enums.DependencyType) *relationship {
+func New(kind enums.RelationshipType) *relationship {
 	return &relationship{kind: kind, lag: time.Duration(0)}
 }
 
-func NewWithLag(kind enums.DependencyType, lag time.Duration) *relationship {
+func NewWithLag(kind enums.RelationshipType, lag time.Duration) *relationship {
 	return &relationship{kind: kind, lag: lag}
 }
 
-func (r *relationship) Type() enums.DependencyType {
+func (r *relationship) Type() enums.RelationshipType {
 	return r.kind
 }
 
-// BackwardPassValue implements [Dependency].
+// BackwardPassValue implements [Relationship].
 func (r *relationship) BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration {
 	interval := successorTimestamp.Late()
 	switch r.kind {
@@ -48,7 +48,7 @@ func (r *relationship) BackwardPassValue(successorTimestamp timestamp.Timestamp)
 	}
 }
 
-// ForwardPassValue implements [Dependency].
+// ForwardPassValue implements [Relationship].
 func (r *relationship) ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration {
 	interval := predecessorTimestamp.Early()
 	switch r.kind {
