@@ -2,6 +2,7 @@ package pdm
 
 import (
 	"errors"
+	"fmt"
 	"iter"
 	"math"
 	"slices"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/dependency/table"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/pdm/relationship"
@@ -21,6 +23,7 @@ type PDM[D activity.Data] interface {
 	RemoveActivity(activity activity.Activity[D])
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship)
 	AddDependencies(dependencies []dependency.Dependency[D]) error
+	AddDependenciesFromTable(table table.DependencyTable[D]) error
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 	Activities() func(yield func(activity.Activity[D]) bool)
 	Successors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool)
@@ -39,6 +42,20 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// AddDependenciesFromTable implements [PDM]. Calls UpdateActivityTimestamps.
+func (p *pdm[D]) AddDependenciesFromTable(table table.DependencyTable[D]) error {
+	for successor := range table.GetActivities() {
+		row, ok := table.GetRow(successor)
+		if !ok {
+			panic(fmt.Sprintf("failed to get predecessors from dependency table %v", table))
+		}
+		for _, predecessor := range row {
+			p.AddDependency(predecessor.Predecessor(), successor, predecessor.DependsVia())
+		}
+	}
+	return p.UpdateActivityTimestamps()
 }
 
 // Predecessors implements [PDM].
