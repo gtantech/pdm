@@ -1,10 +1,13 @@
 # Precedence Diagram Method for Go
-This is a Go package that provides an implementation to help plan a project via [PDM](https://en.wikipedia.org/wiki/Precedence_diagram_method).
+This is a Go package that provides an implementation to help plan dependencies of a project via the [Precedence Diagram Method](https://en.wikipedia.org/wiki/Precedence_diagram_method).
+
+[![Docs](https://godoc.org/github.com/gtantech/pdm?status.svg)](https://pkg.go.dev/github.com/gtantech/pdm?tab=doc)
 
 ## Table of Contents
 - [Install](#install)
 - [Example](#example)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 ## Install
 Install via `go get`. Note that Go 1.23 or newer is required.
@@ -72,6 +75,11 @@ func main() {
 ## License
 
 Licensed under [MIT License](./LICENSE)
+
+## Acknowledgements
+
+* Engineer4Free [youtube playlist](https://www.youtube.com/@Engineer4Free/playlists)
+	* A big thank you to Engineer4Free ([youtube](https://www.youtube.com/@Engineer4Free)) for their amazing course in project management. Most of the test cases used in this project were from their worked examples in their project management [playlist](https://www.youtube.com/@Engineer4Free/playlists).
 
 ## Thanks!
 
