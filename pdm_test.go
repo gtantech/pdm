@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/pdm/relationship"
@@ -870,5 +871,106 @@ func TestCriticalActivities(t *testing.T) {
 		return a == H
 	}), true; got != want {
 		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestAddDependencies(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+
+	d1 := dependency.New(A, B, relationship.New(enums.FS))
+	d2 := dependency.New(A, C, relationship.New(enums.FS))
+	d3 := dependency.New(B, D, relationship.New(enums.FS))
+	d4 := dependency.New(C, E, relationship.New(enums.FS))
+	d5 := dependency.New(C, F, relationship.New(enums.FS))
+	d6 := dependency.New(D, G, relationship.New(enums.FS))
+	d7 := dependency.New(E, G, relationship.New(enums.FS))
+	d8 := dependency.New(F, H, relationship.New(enums.FS))
+	d9 := dependency.New(G, H, relationship.New(enums.FS))
+
+	p.AddDependencies([]dependency.Dependency[*mockActivityData]{d1, d2, d3, d4, d5, d6, d7, d8, d9})
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(9*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := D.Early(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := D.Late(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := E.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(6*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := E.Late(), interval.New(time.Duration(11*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := F.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := F.Late(), interval.New(time.Duration(14*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := G.Early(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := G.Late(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := H.Early(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := H.Late(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
 	}
 }

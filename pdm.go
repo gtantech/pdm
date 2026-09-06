@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/pdm/relationship"
@@ -18,6 +19,7 @@ type PDM[D activity.Data] interface {
 	AddActivity(activity activity.Activity[D]) activity.Activity[D]
 	RemoveActivity(activity activity.Activity[D])
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship)
+	AddDependencies(dependencies []dependency.Dependency[D]) error
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 	Activities() func(yield func(activity.Activity[D]) bool)
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
@@ -33,6 +35,14 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// AddDependencies implements [PDM]. Will call UpdateActivityTimestamps().
+func (p *pdm[D]) AddDependencies(dependencies []dependency.Dependency[D]) error {
+	for _, d := range dependencies {
+		p.AddDependency(d.Predecessor(), d.Successor(), d.DependsVia())
+	}
+	return p.UpdateActivityTimestamps()
 }
 
 // CriticalActivities implements [PDM].
