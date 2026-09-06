@@ -24,6 +24,7 @@ type PDM[D activity.Data] interface {
 	Activities() func(yield func(activity.Activity[D]) bool)
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
 	LoneActivities() func(yield func(activity.Activity[D]) bool)
+	IntermediaryActivities() func(yield func(activity.Activity[D]) bool)
 	FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool)
 	CriticalActivities(threshold time.Duration) func(yield func(activity.Activity[D]) bool)
 	UpdateActivityTimestamps() error
@@ -35,6 +36,26 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// IntermediaryActivities implements [PDM].
+func (p *pdm[D]) IntermediaryActivities() func(yield func(activity.Activity[D]) bool) {
+	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
+		hasIncoming := false
+		for range p.graph.IncomingVertices(v) {
+			if hasIncoming {
+				break
+			}
+			hasIncoming = true
+		}
+		if !hasIncoming {
+			return false
+		}
+		for range p.graph.OutgoingVertices(v) {
+			return true
+		}
+		return false
+	})
 }
 
 // AddDependencies implements [PDM]. Will call UpdateActivityTimestamps().

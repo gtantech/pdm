@@ -177,6 +177,57 @@ func TestInitialPredecessorActivities(t *testing.T) {
 	}
 }
 
+func TestIntermediaryActivities(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
+
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
+
+	intermediaryActivities := slices.Collect(p.IntermediaryActivities())
+
+	if got, want := len(intermediaryActivities), 4; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(intermediaryActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == B
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(intermediaryActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == C
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(intermediaryActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == D
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	if got, want := slices.ContainsFunc(intermediaryActivities, func(a activity.Activity[*mockActivityData]) bool {
+		return a == E
+	}), true; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
 func TestFinalSuccessorActivities(t *testing.T) {
 	p := New[*mockActivityData]()
 
