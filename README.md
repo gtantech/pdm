@@ -19,6 +19,7 @@ Install via `go get`. Note that Go 1.23 or newer is required.
 go get -u github.com/gtantech/pdm
 ```
 ## Features
+* Adding activities from a table of dependencies
 * Critical activity identification
 * Early Start, Early Finish, Late Start, Late Finish calculations of each activity
 * Total Float and Free Float calculations of each activity
