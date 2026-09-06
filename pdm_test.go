@@ -1066,3 +1066,117 @@ func TestAddDependencies(t *testing.T) {
 		t.Errorf("want: %T %#v", want, want)
 	}
 }
+
+func TestSuccesors(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
+
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
+
+	successorsOfA := []activity.Activity[*mockActivityData]{B, C}
+	for s := range p.Successors(A) {
+		if !slices.Contains(successorsOfA, s) {
+			t.Errorf("%v not in successors", s.Data().name)
+		}
+	}
+	successorsOfB := []activity.Activity[*mockActivityData]{D}
+	for s := range p.Successors(B) {
+		if !slices.Contains(successorsOfB, s) {
+			t.Errorf("%v not in successors", s.Data().name)
+		}
+	}
+	successorsOfC := []activity.Activity[*mockActivityData]{E}
+	for s := range p.Successors(C) {
+		if !slices.Contains(successorsOfC, s) {
+			t.Errorf("%v not in successors", s.Data().name)
+		}
+	}
+	successorsOfD := []activity.Activity[*mockActivityData]{F}
+	for s := range p.Successors(D) {
+		if !slices.Contains(successorsOfD, s) {
+			t.Errorf("%v not in successors", s.Data().name)
+		}
+	}
+	successorsOfE := []activity.Activity[*mockActivityData]{F}
+	for s := range p.Successors(E) {
+		if !slices.Contains(successorsOfE, s) {
+			t.Errorf("%v not in successors", s.Data().name)
+		}
+	}
+	for s := range p.Successors(F) {
+		t.Errorf("expected no successor, got %v", s.Data().name)
+	}
+
+}
+
+func TestPredecessors(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*5))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*5))
+	D := activity.New(NewMockActivityData("D", time.Minute*6))
+	E := activity.New(NewMockActivityData("E", time.Minute*3))
+	F := activity.New(NewMockActivityData("F", time.Minute*4))
+
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
+
+	for s := range p.Predecessors(A) {
+		t.Errorf("expected no predecessor, got %v", s.Data().name)
+	}
+	predecessorOfB := []activity.Activity[*mockActivityData]{A}
+	for s := range p.Predecessors(B) {
+		if !slices.Contains(predecessorOfB, s) {
+			t.Errorf("%v not in predecessor", s.Data().name)
+		}
+	}
+	predecessorOfC := []activity.Activity[*mockActivityData]{A}
+	for s := range p.Predecessors(C) {
+		if !slices.Contains(predecessorOfC, s) {
+			t.Errorf("%v not in predecessor", s.Data().name)
+		}
+	}
+	predecessorOfD := []activity.Activity[*mockActivityData]{B}
+	for s := range p.Predecessors(D) {
+		if !slices.Contains(predecessorOfD, s) {
+			t.Errorf("%v not in predecessor", s.Data().name)
+		}
+	}
+	predecessorOfE := []activity.Activity[*mockActivityData]{C}
+	for s := range p.Predecessors(E) {
+		if !slices.Contains(predecessorOfE, s) {
+			t.Errorf("%v not in predecessor", s.Data().name)
+		}
+	}
+	predecessorOfF := []activity.Activity[*mockActivityData]{D, E}
+	for s := range p.Predecessors(F) {
+		if !slices.Contains(predecessorOfF, s) {
+			t.Errorf("%v not in predecessor", s.Data().name)
+		}
+	}
+
+}

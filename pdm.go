@@ -23,6 +23,8 @@ type PDM[D activity.Data] interface {
 	AddDependencies(dependencies []dependency.Dependency[D]) error
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 	Activities() func(yield func(activity.Activity[D]) bool)
+	Successors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool)
+	Predecessors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool)
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
 	LoneActivities() func(yield func(activity.Activity[D]) bool)
 	IntermediaryActivities() func(yield func(activity.Activity[D]) bool)
@@ -37,6 +39,16 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// Predecessors implements [PDM].
+func (p *pdm[D]) Predecessors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool) {
+	return p.graph.IncomingVertices(activity)
+}
+
+// Successors implements [PDM].
+func (p *pdm[D]) Successors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool) {
+	return p.graph.OutgoingVertices(activity)
 }
 
 // IntermediaryActivities implements [PDM].
