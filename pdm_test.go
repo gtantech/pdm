@@ -791,3 +791,19 @@ func TestFreeFloat(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestTotalFloat(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	a := activity.New(NewMockActivityData("A", time.Minute*3))
+	a.UpdateEarly(interval.New(5*time.Minute, 8*time.Minute))
+	a.UpdateLate(interval.New(6*time.Minute, 9*time.Minute))
+
+	if got, want := p.TotalFloat(a), 1*time.Minute; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}

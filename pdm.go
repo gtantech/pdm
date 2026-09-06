@@ -25,12 +25,18 @@ type PDM[D activity.Data] interface {
 	FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool)
 	UpdateActivityTimestamps() error
 	FreeFloat(activity activity.Activity[D]) time.Duration
+	TotalFloat(activity activity.Activity[D]) time.Duration
 }
 
 var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements PDM at compile time
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], dependency.Dependency]
+}
+
+// TotalFloat implements [PDM].
+func (p *pdm[D]) TotalFloat(activity activity.Activity[D]) time.Duration {
+	return activity.TotalFloat()
 }
 
 func New[D activity.Data]() *pdm[D] {
