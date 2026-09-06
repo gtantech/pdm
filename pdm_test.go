@@ -10,6 +10,7 @@ import (
 
 	"github.com/gtantech/pdm/activity"
 	"github.com/gtantech/pdm/dependency"
+	"github.com/gtantech/pdm/dependency/table"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
 	"github.com/gtantech/pdm/relationship"
@@ -1179,4 +1180,87 @@ func TestPredecessors(t *testing.T) {
 		}
 	}
 
+}
+
+func TestAddDependenciesFromTable(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*3))
+
+	tbl := table.New[*mockActivityData]()
+	tbl.UpdatePredecessors(B, []table.PredecessorDependency[*mockActivityData]{table.NewPredecessorDependency(A, relationship.New(enums.FS))})
+	tbl.UpdatePredecessors(C, []table.PredecessorDependency[*mockActivityData]{table.NewPredecessorDependency(B, relationship.NewWithLag(enums.FS, 2*time.Minute))})
+
+	err := p.AddDependenciesFromTable(tbl)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(3*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(9*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(9*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
+
+type mockTablePanic[D activity.Data] struct {
+	table.DependencyTable[D]
+}
+
+func (mt *mockTablePanic[D]) GetRow(successor activity.Activity[D]) ([]table.PredecessorDependency[D], bool) {
+	return nil, false
+}
+
+func TestAddDependenciesPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("failed AddDependenciesFromTable did not panic")
+		}
+	}()
+
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*3))
+
+	tbl := mockTablePanic[*mockActivityData]{DependencyTable: table.New[*mockActivityData]()}
+	tbl.UpdatePredecessors(B, []table.PredecessorDependency[*mockActivityData]{table.NewPredecessorDependency(A, relationship.New(enums.FS))})
+	tbl.UpdatePredecessors(C, []table.PredecessorDependency[*mockActivityData]{table.NewPredecessorDependency(B, relationship.NewWithLag(enums.FS, 2*time.Minute))})
+
+	err := p.AddDependenciesFromTable(&tbl)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 }
