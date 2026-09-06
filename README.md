@@ -7,6 +7,7 @@ This is a Go package that provides an implementation to help plan dependencies o
 - [Install](#install)
 - [Features](#features)
 - [Example](#example)
+- [Error Handling](#error-handling)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
