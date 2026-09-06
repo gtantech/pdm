@@ -1,6 +1,8 @@
 # Precedence Diagram Method for Go
 This is a Go package that provides an implementation to help plan dependencies of a project via the [Precedence Diagram Method](https://en.wikipedia.org/wiki/Precedence_diagram_method).
 
+[![Docs](https://godoc.org/github.com/gtantech/pdm?status.svg)](https://pkg.go.dev/github.com/gtantech/pdm?tab=doc)
+
 ## Table of Contents
 - [Install](#install)
 - [Example](#example)
