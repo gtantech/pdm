@@ -1,66 +1,39 @@
 package dependency
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/gtantech/pdm/activity/timestamp"
-	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/activity"
+	"github.com/gtantech/pdm/relationship"
 )
 
-type Dependency interface {
-	Type() enums.DependencyType
-	ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration
-	BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration
+type Dependency[D activity.Data] interface {
+	Predecessor() activity.Activity[D]
+	Successor() activity.Activity[D]
+	DependsVia() relationship.Relationship
 }
 
-type relationship struct {
-	kind enums.DependencyType
-	lag  time.Duration
+type dependency[D activity.Data] struct {
+	predecessor activity.Activity[D]
+	successor   activity.Activity[D]
+	dependsVia  relationship.Relationship
 }
 
-func New(kind enums.DependencyType) *relationship {
-	return &relationship{kind: kind, lag: time.Duration(0)}
+// DependsVia implements [Dependency].
+func (d *dependency[D]) DependsVia() relationship.Relationship {
+	return d.dependsVia
 }
 
-func NewWithLag(kind enums.DependencyType, lag time.Duration) *relationship {
-	return &relationship{kind: kind, lag: lag}
+// Predecessor implements [Dependency].
+func (d *dependency[D]) Predecessor() activity.Activity[D] {
+	return d.predecessor
 }
 
-func (r *relationship) Type() enums.DependencyType {
-	return r.kind
+// Successor implements [Dependency].
+func (d *dependency[D]) Successor() activity.Activity[D] {
+	return d.successor
 }
 
-// BackwardPassValue implements [Dependency].
-func (r *relationship) BackwardPassValue(successorTimestamp timestamp.Timestamp) time.Duration {
-	interval := successorTimestamp.Late()
-	switch r.kind {
-	case enums.FF:
-		return interval.Finish() - r.lag
-	case enums.FS:
-		return interval.Start() - r.lag
-	case enums.SF:
-		return interval.Finish() - r.lag
-	case enums.SS:
-		return interval.Start() - r.lag
-	default:
-		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
-	}
-}
+var _ Dependency[activity.Data] = (*dependency[activity.Data])(nil) //ensures ExampleStruct implements ExampleInterface at compile time
 
-// ForwardPassValue implements [Dependency].
-func (r *relationship) ForwardPassValue(predecessorTimestamp timestamp.Timestamp) time.Duration {
-	interval := predecessorTimestamp.Early()
-	switch r.kind {
-	case enums.FF:
-		return interval.Finish() + r.lag
-	case enums.FS:
-		return interval.Finish() + r.lag
-	case enums.SF:
-		return interval.Start() + r.lag
-	case enums.SS:
-		return interval.Start() + r.lag
-	default:
-		panic(fmt.Sprintf("unknown enum used: %v", r.kind))
-	}
+func New[D activity.Data](predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship) *dependency[D] {
+	return &dependency[D]{predecessor: predecessor, successor: successor, dependsVia: dependsVia}
 }

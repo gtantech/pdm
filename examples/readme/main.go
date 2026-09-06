@@ -6,8 +6,8 @@ import (
 
 	"github.com/gtantech/pdm"
 	"github.com/gtantech/pdm/activity"
-	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
+	"github.com/gtantech/pdm/relationship"
 )
 
 type Attributes struct {
@@ -27,14 +27,14 @@ func main() {
 
 	// add dependencies to pdm
 	//                                                    // A has no dependencies
-	project.AddDependency(A, B, dependency.New(enums.FS)) // B depends on A
-	project.AddDependency(A, C, dependency.New(enums.FS)) // C depends on A
-	project.AddDependency(B, D, dependency.New(enums.FS)) //       .
-	project.AddDependency(C, E, dependency.New(enums.FS)) //       .
-	project.AddDependency(D, F, dependency.New(enums.FS)) // F depends on D and E
-	project.AddDependency(E, F, dependency.New(enums.FS))
+	project.AddDependency(A, B, relationship.New(enums.FS)) // B depends on A
+	project.AddDependency(A, C, relationship.New(enums.FS)) // C depends on A
+	project.AddDependency(B, D, relationship.New(enums.FS)) //       .
+	project.AddDependency(C, E, relationship.New(enums.FS)) //       .
+	project.AddDependency(D, F, relationship.New(enums.FS)) // F depends on D and E
+	project.AddDependency(E, F, relationship.New(enums.FS))
 
-	// update the early/late start/finish of each activity
+	// remember to call UpdateActivityTimestamps() to update the early/late start/finish of each activity
 	project.UpdateActivityTimestamps()
 
 	// print the early/late start/finish of each activity

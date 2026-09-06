@@ -11,6 +11,7 @@ import (
 	"github.com/gtantech/pdm/dependency"
 	"github.com/gtantech/pdm/enums"
 	"github.com/gtantech/pdm/interval"
+	"github.com/gtantech/pdm/relationship"
 	"github.com/gtantech/toposort/v2/graph"
 )
 
@@ -24,7 +25,7 @@ func NewMockActivityData(name string, duration time.Duration) *mockActivityData 
 }
 
 type mockGraph struct {
-	graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]
+	graph.Graph[activity.Activity[*mockActivityData], relationship.Relationship]
 	isAddVertexCalled    bool
 	isRemoveVertexCalled bool
 	isAddEdgeCalled      bool
@@ -38,7 +39,7 @@ func (g *mockGraph) AddVertex(v activity.Activity[*mockActivityData]) {
 func (g *mockGraph) RemoveVertex(v activity.Activity[*mockActivityData]) {
 	g.isRemoveVertexCalled = true
 }
-func (g *mockGraph) AddEdge(value dependency.Dependency, origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) {
+func (g *mockGraph) AddEdge(value relationship.Relationship, origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) {
 	g.isAddEdgeCalled = true
 }
 func (g *mockGraph) RemoveEdge(origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) {
@@ -50,16 +51,16 @@ func (g *mockGraph) Vertices() func(yield func(activity.Activity[*mockActivityDa
 }
 
 type mockGraphGetEdgePanic struct {
-	graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]
+	graph.Graph[activity.Activity[*mockActivityData], relationship.Relationship]
 }
 
-func (g *mockGraphGetEdgePanic) GetEdgeValue(origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) (dependency.Dependency, bool) {
+func (g *mockGraphGetEdgePanic) GetEdgeValue(origin activity.Activity[*mockActivityData], destination activity.Activity[*mockActivityData]) (relationship.Relationship, bool) {
 	return nil, false
 }
 
 func TestFields(t *testing.T) {
 	p := New[*mockActivityData]()
-	mockGraph := &mockGraph{Graph: graph.New[activity.Activity[*mockActivityData], dependency.Dependency]()}
+	mockGraph := &mockGraph{Graph: graph.New[activity.Activity[*mockActivityData], relationship.Relationship]()}
 	p.graph = mockGraph
 	a := activity.New(NewMockActivityData("a", time.Duration(0)))
 	b := activity.New(NewMockActivityData("b", time.Duration(0)))
@@ -74,7 +75,7 @@ func TestFields(t *testing.T) {
 	if !mockGraph.isRemoveVertexCalled {
 		t.Errorf("graph.RemoveVertex not called")
 	}
-	p.AddDependency(a, b, dependency.New(enums.FS))
+	p.AddDependency(a, b, relationship.New(enums.FS))
 	if !mockGraph.isAddEdgeCalled {
 		t.Errorf("graph.AddEdge not called")
 	}
@@ -102,12 +103,12 @@ func TestPDMCreation(t *testing.T) {
 	E := activity.New(NewMockActivityData("E", time.Minute*3))
 	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(D, F, dependency.New(enums.FS))
-	p.AddDependency(E, F, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
 
 	for v := range p.graph.IncomingVertices(A) {
 		t.Errorf("got %v but %v does not have any incoming vertices", v.Data(), A.Data())
@@ -162,12 +163,12 @@ func TestInitialPredecessorActivities(t *testing.T) {
 	E := activity.New(NewMockActivityData("E", time.Minute*3))
 	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(D, F, dependency.New(enums.FS))
-	p.AddDependency(E, F, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
 
 	spa := slices.Collect(p.InitialPredecessorActivities())
 
@@ -190,12 +191,12 @@ func TestFinalSuccessorActivities(t *testing.T) {
 	E := activity.New(NewMockActivityData("E", time.Minute*3))
 	F := activity.New(NewMockActivityData("F", time.Minute*4))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(D, F, dependency.New(enums.FS))
-	p.AddDependency(E, F, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(D, F, relationship.New(enums.FS))
+	p.AddDependency(E, F, relationship.New(enums.FS))
 
 	spa := slices.Collect(p.FinalSuccessorActivities())
 
@@ -220,15 +221,15 @@ func TestUpdateActivityTimestamps(t *testing.T) {
 	G := activity.New(NewMockActivityData("G", time.Minute*4))
 	H := activity.New(NewMockActivityData("H", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(C, F, dependency.New(enums.FS))
-	p.AddDependency(D, G, dependency.New(enums.FS))
-	p.AddDependency(E, G, dependency.New(enums.FS))
-	p.AddDependency(F, H, dependency.New(enums.FS))
-	p.AddDependency(G, H, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(C, F, relationship.New(enums.FS))
+	p.AddDependency(D, G, relationship.New(enums.FS))
+	p.AddDependency(E, G, relationship.New(enums.FS))
+	p.AddDependency(F, H, relationship.New(enums.FS))
+	p.AddDependency(G, H, relationship.New(enums.FS))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -364,15 +365,15 @@ func TestUpdateActivityTimestampsLone(t *testing.T) {
 	I := activity.New(NewMockActivityData("I", time.Minute*3))
 	p.AddActivity(I)
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(C, F, dependency.New(enums.FS))
-	p.AddDependency(D, G, dependency.New(enums.FS))
-	p.AddDependency(E, G, dependency.New(enums.FS))
-	p.AddDependency(F, H, dependency.New(enums.FS))
-	p.AddDependency(G, H, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(C, F, relationship.New(enums.FS))
+	p.AddDependency(D, G, relationship.New(enums.FS))
+	p.AddDependency(E, G, relationship.New(enums.FS))
+	p.AddDependency(F, H, relationship.New(enums.FS))
+	p.AddDependency(G, H, relationship.New(enums.FS))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -396,7 +397,7 @@ func TestTopologicalSorterError(t *testing.T) {
 		t.Errorf("expected non-nil graph")
 	}
 
-	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[*mockActivityData], dependency.Dependency]) ([]activity.Activity[*mockActivityData], error) {
+	err := p.updateActivityTimestamp(func(g graph.Graph[activity.Activity[*mockActivityData], relationship.Relationship]) ([]activity.Activity[*mockActivityData], error) {
 		return nil, fmt.Errorf("test error")
 	})
 
@@ -417,9 +418,9 @@ func TestStartToStartRelationship(t *testing.T) {
 	C := activity.New(NewMockActivityData("C", time.Minute*4))
 	D := activity.New(NewMockActivityData("D", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.SS))
-	p.AddDependency(B, C, dependency.New(enums.FS))
-	p.AddDependency(C, D, dependency.NewWithLag(enums.SS, time.Minute*2))
+	p.AddDependency(A, B, relationship.New(enums.SS))
+	p.AddDependency(B, C, relationship.New(enums.FS))
+	p.AddDependency(C, D, relationship.NewWithLag(enums.SS, time.Minute*2))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -476,9 +477,9 @@ func TestFinishToFinishRelationship(t *testing.T) {
 	C := activity.New(NewMockActivityData("C", time.Minute*3))
 	D := activity.New(NewMockActivityData("D", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.FF))
-	p.AddDependency(B, C, dependency.NewWithLag(enums.FF, time.Minute*2))
-	p.AddDependency(C, D, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FF))
+	p.AddDependency(B, C, relationship.NewWithLag(enums.FF, time.Minute*2))
+	p.AddDependency(C, D, relationship.New(enums.FS))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -534,8 +535,8 @@ func TestStartToFinishRelationship(t *testing.T) {
 	B := activity.New(NewMockActivityData("B", time.Minute*3))
 	C := activity.New(NewMockActivityData("C", time.Minute*4))
 
-	p.AddDependency(A, B, dependency.NewWithLag(enums.SF, time.Minute*5))
-	p.AddDependency(B, C, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.NewWithLag(enums.SF, time.Minute*5))
+	p.AddDependency(B, C, relationship.New(enums.FS))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -581,8 +582,8 @@ func TestFinishToStartRelationship(t *testing.T) {
 	B := activity.New(NewMockActivityData("B", time.Minute*4))
 	C := activity.New(NewMockActivityData("C", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(B, C, dependency.NewWithLag(enums.FS, time.Minute*2))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(B, C, relationship.NewWithLag(enums.FS, time.Minute*2))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -633,15 +634,15 @@ func TestMixedRelationships(t *testing.T) {
 	G := activity.New(NewMockActivityData("G", time.Minute*4))
 	H := activity.New(NewMockActivityData("H", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.NewWithLag(enums.FS, time.Minute*2))
-	p.AddDependency(A, C, dependency.New(enums.SS))
-	p.AddDependency(B, D, dependency.NewWithLag(enums.SS, time.Minute*1))
-	p.AddDependency(C, E, dependency.NewWithLag(enums.SF, time.Minute*3))
-	p.AddDependency(C, F, dependency.NewWithLag(enums.FF, time.Minute*3))
-	p.AddDependency(D, G, dependency.NewWithLag(enums.SS, time.Minute*1))
-	p.AddDependency(E, G, dependency.New(enums.FS))
-	p.AddDependency(F, H, dependency.NewWithLag(enums.SF, time.Minute*2))
-	p.AddDependency(G, H, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.NewWithLag(enums.FS, time.Minute*2))
+	p.AddDependency(A, C, relationship.New(enums.SS))
+	p.AddDependency(B, D, relationship.NewWithLag(enums.SS, time.Minute*1))
+	p.AddDependency(C, E, relationship.NewWithLag(enums.SF, time.Minute*3))
+	p.AddDependency(C, F, relationship.NewWithLag(enums.FF, time.Minute*3))
+	p.AddDependency(D, G, relationship.NewWithLag(enums.SS, time.Minute*1))
+	p.AddDependency(E, G, relationship.New(enums.FS))
+	p.AddDependency(F, H, relationship.NewWithLag(enums.SF, time.Minute*2))
+	p.AddDependency(G, H, relationship.New(enums.FS))
 
 	err := p.UpdateActivityTimestamps()
 	if err != nil {
@@ -727,7 +728,7 @@ func TestGetDependency(t *testing.T) {
 			t.Error("failed to GetDependency did not panic")
 		}
 	}()
-	mockGraph := &mockGraphGetEdgePanic{Graph: graph.New[activity.Activity[*mockActivityData], dependency.Dependency]()}
+	mockGraph := &mockGraphGetEdgePanic{Graph: graph.New[activity.Activity[*mockActivityData], relationship.Relationship]()}
 	getDependency(mockGraph, nil, nil)
 }
 
@@ -747,15 +748,15 @@ func TestFreeFloat(t *testing.T) {
 	G := activity.New(NewMockActivityData("G", time.Minute*4))
 	H := activity.New(NewMockActivityData("H", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(C, F, dependency.New(enums.FS))
-	p.AddDependency(D, G, dependency.New(enums.FS))
-	p.AddDependency(E, G, dependency.New(enums.FS))
-	p.AddDependency(F, H, dependency.New(enums.FS))
-	p.AddDependency(G, H, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(C, F, relationship.New(enums.FS))
+	p.AddDependency(D, G, relationship.New(enums.FS))
+	p.AddDependency(E, G, relationship.New(enums.FS))
+	p.AddDependency(F, H, relationship.New(enums.FS))
+	p.AddDependency(G, H, relationship.New(enums.FS))
 
 	p.UpdateActivityTimestamps()
 
@@ -824,15 +825,15 @@ func TestCriticalActivities(t *testing.T) {
 	G := activity.New(NewMockActivityData("G", time.Minute*4))
 	H := activity.New(NewMockActivityData("H", time.Minute*3))
 
-	p.AddDependency(A, B, dependency.New(enums.FS))
-	p.AddDependency(A, C, dependency.New(enums.FS))
-	p.AddDependency(B, D, dependency.New(enums.FS))
-	p.AddDependency(C, E, dependency.New(enums.FS))
-	p.AddDependency(C, F, dependency.New(enums.FS))
-	p.AddDependency(D, G, dependency.New(enums.FS))
-	p.AddDependency(E, G, dependency.New(enums.FS))
-	p.AddDependency(F, H, dependency.New(enums.FS))
-	p.AddDependency(G, H, dependency.New(enums.FS))
+	p.AddDependency(A, B, relationship.New(enums.FS))
+	p.AddDependency(A, C, relationship.New(enums.FS))
+	p.AddDependency(B, D, relationship.New(enums.FS))
+	p.AddDependency(C, E, relationship.New(enums.FS))
+	p.AddDependency(C, F, relationship.New(enums.FS))
+	p.AddDependency(D, G, relationship.New(enums.FS))
+	p.AddDependency(E, G, relationship.New(enums.FS))
+	p.AddDependency(F, H, relationship.New(enums.FS))
+	p.AddDependency(G, H, relationship.New(enums.FS))
 
 	p.UpdateActivityTimestamps()
 
@@ -870,5 +871,109 @@ func TestCriticalActivities(t *testing.T) {
 		return a == H
 	}), true; got != want {
 		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestAddDependencies(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+
+	d1 := dependency.New(A, B, relationship.New(enums.FS))
+	d2 := dependency.New(A, C, relationship.New(enums.FS))
+	d3 := dependency.New(B, D, relationship.New(enums.FS))
+	d4 := dependency.New(C, E, relationship.New(enums.FS))
+	d5 := dependency.New(C, F, relationship.New(enums.FS))
+	d6 := dependency.New(D, G, relationship.New(enums.FS))
+	d7 := dependency.New(E, G, relationship.New(enums.FS))
+	d8 := dependency.New(F, H, relationship.New(enums.FS))
+	d9 := dependency.New(G, H, relationship.New(enums.FS))
+
+	err := p.AddDependencies([]dependency.Dependency[*mockActivityData]{d1, d2, d3, d4, d5, d6, d7, d8, d9})
+	if err != nil {
+		t.Errorf("unexpected error occurred: %v", err)
+	}
+
+	if got, want := A.Early(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := A.Late(), interval.New(time.Duration(0), time.Duration(time.Minute*3)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := B.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := B.Late(), interval.New(time.Duration(3*time.Minute), time.Duration(time.Minute*7)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := C.Early(), interval.New(time.Duration(3*time.Minute), time.Duration(5*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := C.Late(), interval.New(time.Duration(9*time.Minute), time.Duration(11*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := D.Early(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := D.Late(), interval.New(time.Duration(7*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := E.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(6*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := E.Late(), interval.New(time.Duration(11*time.Minute), time.Duration(12*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := F.Early(), interval.New(time.Duration(5*time.Minute), time.Duration(7*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := F.Late(), interval.New(time.Duration(14*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := G.Early(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := G.Late(), interval.New(time.Duration(12*time.Minute), time.Duration(16*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+
+	if got, want := H.Early(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+	if got, want := H.Late(), interval.New(time.Duration(16*time.Minute), time.Duration(19*time.Minute)); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
 	}
 }
