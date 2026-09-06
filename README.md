@@ -1,7 +1,7 @@
 # Precedence Diagram Method for Go
 This is a Go package that provides an implementation to help plan dependencies of a project via the [Precedence Diagram Method](https://en.wikipedia.org/wiki/Precedence_diagram_method).
 
-[![Docs](https://godoc.org/github.com/gtantech/pdm?status.svg)](https://pkg.go.dev/github.com/gtantech/pdm?tab=doc)
+[![CI Status](https://github.com/gtantech/pdm/actions/workflows/ci.yaml/badge.svg)](https://github.com/gtantech/pdm/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/gtantech/pdm/graph/badge.svg)](https://codecov.io/gh/gtantech/pdm) [![Docs](https://godoc.org/github.com/gtantech/pdm?status.svg)](https://pkg.go.dev/github.com/gtantech/pdm?tab=doc)
 
 ## Table of Contents
 - [Install](#install)
@@ -77,6 +77,22 @@ func main() {
 
 }
 
+```
+
+## Error Handling
+### CycleDetectedError
+`pdm.UpdateActivityTimestamps()` features cycle detection and will return a `CycleDetectedError` when encountering a cycle within the network of activities. Below is an error handling example, continued from the above example.
+```go
+err := project.UpdateActivityTimestamps()
+if err != nil {
+	var e *pdm.CycleDetectedError[activity.Activity[Attributes], relationship.Relationship]
+	if errors.As(err, &e) {
+		fmt.Printf("encountered cycle from %v to %v with relationship: %v",
+			e.Predecessor.Data().Name,
+			e.Successor.Data().Name,
+			e.Relationship.Type())
+	}
+}
 ```
 
 ## License
