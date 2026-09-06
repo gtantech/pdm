@@ -1,5 +1,5 @@
 # Precedence Diagram Method for Go
-This is a Go package that provides an implementation to help plan a project via [PDM](https://en.wikipedia.org/wiki/Precedence_diagram_method).
+This is a Go package that provides an implementation to help plan dependencies of a project via the [Precedence Diagram Method](https://en.wikipedia.org/wiki/Precedence_diagram_method).
 
 ## Table of Contents
 - [Install](#install)
