@@ -1264,3 +1264,24 @@ func TestAddDependenciesPanic(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
+
+func TestGetRelationship(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	relationship := relationship.New(enums.FS)
+	p.AddDependency(A, B, relationship)
+
+	got, ok := p.GetRelationship(A, B)
+	if !ok {
+		t.Errorf("expected successful GetRelationship, got false")
+	}
+	if want := relationship; got != want {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}

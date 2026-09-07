@@ -38,6 +38,9 @@ type PDM[D activity.Data] interface {
 	// RemoveDependency removes a dependency from a predecessor activity to the successor activity.
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 
+	// GetRelationship returns the [relationship.Relationship] between the predecessor activity and successor activity.
+	GetRelationship(predecessor activity.Activity[D], successor activity.Activity[D]) (relationship.Relationship, bool)
+
 	// Activities returns an iterator over all activities in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	Activities() func(yield func(activity.Activity[D]) bool)
 
@@ -78,6 +81,14 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// GetRelationship implements [PDM]. GetRelationship returns the [relationship.Relationship] between the predecessor activity and successor activity. Will return false if failed to return.
+//
+// Added in pdm v1.1.0.
+func (p *pdm[D]) GetRelationship(predecessor activity.Activity[D], successor activity.Activity[D]) (relationship.Relationship, bool) {
+	d, ok := p.graph.GetEdgeValue(predecessor, successor)
+	return d, ok
 }
 
 // AddDependenciesFromTable implements [PDM]. AddDependenciesFromTable adds all [table.PredecessorDependency] into p.
