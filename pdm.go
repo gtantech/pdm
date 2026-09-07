@@ -44,7 +44,11 @@ type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
 }
 
-// AddDependenciesFromTable implements [PDM]. Calls UpdateActivityTimestamps.
+// AddDependenciesFromTable implements [PDM]. AddDependenciesFromTable adds all [table.PredecessorDependency] into p.
+//
+// Calls UpdateActivityTimestamps, and returns a CycleDetectedError if a cycle is encountered in p.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) AddDependenciesFromTable(table table.DependencyTable[D]) error {
 	for successor := range table.GetActivities() {
 		row, ok := table.GetRow(successor)
@@ -58,17 +62,23 @@ func (p *pdm[D]) AddDependenciesFromTable(table table.DependencyTable[D]) error 
 	return p.UpdateActivityTimestamps()
 }
 
-// Predecessors implements [PDM].
+// Predecessors implements [PDM]. Predecessors returns an iterator over preceeding activities to the activity specified. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) Predecessors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool) {
 	return p.graph.IncomingVertices(activity)
 }
 
-// Successors implements [PDM].
+// Successors implements [PDM]. Successors returns an iterator over succeeding activities to the activity specified. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) Successors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool) {
 	return p.graph.OutgoingVertices(activity)
 }
 
-// IntermediaryActivities implements [PDM].
+// IntermediaryActivities implements [PDM]. IntermediaryActivities returns an iterator over activities between the start and final activities. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) IntermediaryActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
 		hasIncoming := false
@@ -88,7 +98,7 @@ func (p *pdm[D]) IntermediaryActivities() func(yield func(activity.Activity[D]) 
 	})
 }
 
-// AddDependencies implements [PDM]. Will call UpdateActivityTimestamps().
+// AddDependencies implements [PDM]. AddDependencies will add each element in the slice of [dependency.Dependency] into p. Will call UpdateActivityTimestamps() at the end.
 func (p *pdm[D]) AddDependencies(dependencies []dependency.Dependency[D]) error {
 	for _, d := range dependencies {
 		p.AddDependency(d.Predecessor(), d.Successor(), d.DependsVia())
@@ -96,44 +106,72 @@ func (p *pdm[D]) AddDependencies(dependencies []dependency.Dependency[D]) error 
 	return p.UpdateActivityTimestamps()
 }
 
-// CriticalActivities implements [PDM].
-// threshold is the value at which if the total float of an activity is less than equal to the threshold value, it is considered critical.
+// CriticalActivities implements [PDM]. CriticalActivities returns an iterator over activities that are considered critical (any delay will affect the project end date). The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// The threshold parameter is the value at which if the total float of an activity is less than equal to the threshold value, it is considered critical.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) CriticalActivities(threshold time.Duration) func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
 		return v.TotalFloat() <= threshold
 	})
 }
 
-// TotalFloat implements [PDM].
+// TotalFloat implements [PDM]. TotalFloat returns the float in activity [activity]. This is the amount of time the activity can be delayed without delaying the project end date
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) TotalFloat(activity activity.Activity[D]) time.Duration {
 	return activity.TotalFloat()
 }
 
+// New returns a new *[pdm]
+//
+// Added in pdm v1.0.0.
 func New[D activity.Data]() *pdm[D] {
 	return &pdm[D]{graph: graph.New[activity.Activity[D], relationship.Relationship]()}
 }
 
+// AddActivity implements [PDM]. AddActivity adds an activity into p and returns the same activity.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) AddActivity(activity activity.Activity[D]) activity.Activity[D] {
 	p.graph.AddVertex(activity)
 	return activity
 }
 
+// RemoveActivity implements [PDM]. RemoveActivity removes the specified activity from p.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) RemoveActivity(activity activity.Activity[D]) {
 	p.graph.RemoveVertex(activity)
 }
 
+// AddDependency implements [PDM]. AddDependency adds a dependency from a predecessor activity to the successor activity, joined by the dependsVia relationship.
+//
+// Remember to call UpdateActivityTimestamps once all dependencies are added.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship) {
 	p.graph.AddEdge(dependsVia, predecessor, successor)
 }
 
+// RemoveDependency implements [PDM]. RemoveDependency removes a dependency from a predecessor activity to the successor activity.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D]) {
 	p.graph.RemoveEdge(predecessor, successor)
 }
 
+// Activities implements [PDM]. Activities returns an iterator over all activities in p. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) Activities() func(yield func(activity.Activity[D]) bool) {
 	return p.graph.Vertices()
 }
 
+// FreeFloat implements [PDM]. FreeFloat returns the maximum amount of time the specified activity can be delayed before the early start of any succeeding activity is delayed. (free float <= total float).
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) FreeFloat(activity activity.Activity[D]) time.Duration {
 	successorMinimumEarlyStart := time.Duration(math.MaxInt64)
 	for successor := range p.graph.OutgoingVertices(activity) {
@@ -159,6 +197,9 @@ func (p *pdm[D]) filter(seq iter.Seq[activity.Activity[D]], predicate func(activ
 	}
 }
 
+// InitialPredecessorActivities implements [PDM]. InitialPredecessorActivities returns an iterator of all starting activities in p. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
 		for range p.graph.IncomingVertices(v) {
@@ -174,6 +215,9 @@ func (p *pdm[D]) InitialPredecessorActivities() func(yield func(activity.Activit
 	})
 }
 
+// LoneActivities implements [PDM]. LoneActivities returns an iterator of all activities in p with no predecessor or successor. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) LoneActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
 		for range p.graph.OutgoingVertices(v) {
@@ -188,6 +232,9 @@ func (p *pdm[D]) LoneActivities() func(yield func(activity.Activity[D]) bool) {
 	})
 }
 
+// FinalSuccessorActivities implements [PDM]. FinalSuccessorActivities returns an iterator of all final activities in p. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
 		for range p.graph.OutgoingVertices(v) {
@@ -311,6 +358,9 @@ func (p *pdm[D]) updateActivityTimestamp(topologicalSorter func(g graph.Graph[ac
 	return nil
 }
 
+// UpdateActivityTimestamps implements [PDM]. UpdateActivityTimestamps updates all start/finish intervals for all activities in p. Returns CycleDetectedError if a cycle is detected in p.
+//
+// Added in pdm v1.0.0.
 func (p *pdm[D]) UpdateActivityTimestamps() error {
 	return p.updateActivityTimestamp(toposort.TopologicalSort)
 }
