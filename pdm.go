@@ -142,20 +142,13 @@ func (p *pdm[D]) Successors(activity activity.Activity[D]) func(yield func(activ
 // Added in pdm v1.0.0.
 func (p *pdm[D]) IntermediaryActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
-		hasIncoming := false
-		for range p.graph.IncomingVertices(v) {
-			if hasIncoming {
-				break
-			}
-			hasIncoming = true
-		}
-		if !hasIncoming {
+		if p.graph.IncomingDegree(v) == 0 {
 			return false
 		}
-		for range p.graph.OutgoingVertices(v) {
-			return true
+		if p.graph.OutgoingDegree(v) == 0 {
+			return false
 		}
-		return false
+		return true
 	})
 }
 
@@ -263,12 +256,12 @@ func (p *pdm[D]) filter(seq iter.Seq[activity.Activity[D]], predicate func(activ
 // Added in pdm v1.0.0.
 func (p *pdm[D]) InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
-		for range p.graph.IncomingVertices(v) {
+		if p.graph.IncomingDegree(v) > 0 {
 			// starting predecessor should not have any incoming vertex, return false if it does
 			return false
 		}
 
-		for range p.graph.OutgoingVertices(v) {
+		if p.graph.OutgoingDegree(v) > 0 {
 			// starting predecessor should have at least 1 outgoing vertex
 			return true
 		}
@@ -281,11 +274,11 @@ func (p *pdm[D]) InitialPredecessorActivities() func(yield func(activity.Activit
 // Added in pdm v1.0.0.
 func (p *pdm[D]) LoneActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
-		for range p.graph.OutgoingVertices(v) {
+		if p.graph.OutgoingDegree(v) > 0 {
 			// lone activity should not have any outgoing vertex, return false if it does
 			return false
 		}
-		for range p.graph.IncomingVertices(v) {
+		if p.graph.IncomingDegree(v) > 0 {
 			// lone activity should not have any incoming vertex, return false if it does
 			return false
 		}
@@ -298,13 +291,13 @@ func (p *pdm[D]) LoneActivities() func(yield func(activity.Activity[D]) bool) {
 // Added in pdm v1.0.0.
 func (p *pdm[D]) FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool) {
 	return p.filter(p.Activities(), func(v activity.Activity[D]) bool {
-		for range p.graph.OutgoingVertices(v) {
-			// starting successor should not have any outgoing vertex, return false if it does
+		if p.graph.OutgoingDegree(v) > 0 {
+			// final successor should not have any outgoing vertex, return false if it does
 			return false
 		}
 
-		for range p.graph.IncomingVertices(v) {
-			// starting predecessor should have at least 1 incoming vertex
+		if p.graph.IncomingDegree(v) > 0 {
+			// final predecessor should have at least 1 incoming vertex
 			return true
 		}
 		return false
