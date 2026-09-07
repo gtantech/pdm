@@ -75,12 +75,26 @@ type PDM[D activity.Data] interface {
 
 	// TotalFloat returns the float in activity [activity.Activity]. This is the amount of time the activity can be delayed without delaying the project end date
 	TotalFloat(activity activity.Activity[D]) time.Duration
+
+	// Duration returns the duration of the project [PDM] , ie. the project end date.
+	Duration() time.Duration
 }
 
 var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements PDM at compile time
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// Duration implements [PDM]. Duration returns the duration of the project [PDM] , ie. the project end date.
+func (p *pdm[D]) Duration() time.Duration {
+	maxLateFinish := time.Duration(0)
+	for a := range p.Activities() {
+		if a.Late().Finish() > maxLateFinish {
+			maxLateFinish = a.Late().Finish()
+		}
+	}
+	return maxLateFinish
 }
 
 // GetRelationship implements [PDM]. GetRelationship returns the [relationship.Relationship] between the predecessor activity and successor activity. Will return false if failed to return.

@@ -1285,3 +1285,40 @@ func TestGetRelationship(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestDuration(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*2))
+	D := activity.New(NewMockActivityData("D", time.Minute*5))
+	E := activity.New(NewMockActivityData("E", time.Minute*1))
+	F := activity.New(NewMockActivityData("F", time.Minute*2))
+	G := activity.New(NewMockActivityData("G", time.Minute*4))
+	H := activity.New(NewMockActivityData("H", time.Minute*3))
+
+	d1 := dependency.New(A, B, relationship.New(enums.FS))
+	d2 := dependency.New(A, C, relationship.New(enums.FS))
+	d3 := dependency.New(B, D, relationship.New(enums.FS))
+	d4 := dependency.New(C, E, relationship.New(enums.FS))
+	d5 := dependency.New(C, F, relationship.New(enums.FS))
+	d6 := dependency.New(D, G, relationship.New(enums.FS))
+	d7 := dependency.New(E, G, relationship.New(enums.FS))
+	d8 := dependency.New(F, H, relationship.New(enums.FS))
+	d9 := dependency.New(G, H, relationship.New(enums.FS))
+
+	err := p.AddDependencies([]dependency.Dependency[*mockActivityData]{d1, d2, d3, d4, d5, d6, d7, d8, d9})
+	if err != nil {
+		t.Errorf("unexpected error occurred: %v", err)
+	}
+
+	if got, want := p.Duration(), time.Duration(19*time.Minute); !reflect.DeepEqual(got, want) {
+		t.Errorf("got:  %T %#v", got, got)
+		t.Errorf("want: %T %#v", want, want)
+	}
+}
