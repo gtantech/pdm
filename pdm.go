@@ -18,23 +18,59 @@ import (
 	"github.com/gtantech/toposort/v2/graph"
 )
 
+// PDM stores and manages all activites and dependencies. Provides functions to manage a project via Precedence Diagram Method.
 type PDM[D activity.Data] interface {
+	// AddActivity adds an activity into [PDM] and returns the same activity.
 	AddActivity(activity activity.Activity[D]) activity.Activity[D]
+
+	// RemoveActivity removes the specified activity from [PDM].
 	RemoveActivity(activity activity.Activity[D])
+
+	// AddDependency adds a dependency from a predecessor activity to the successor activity, joined by the dependsVia relationship.
 	AddDependency(predecessor activity.Activity[D], successor activity.Activity[D], dependsVia relationship.Relationship)
+
+	// AddDependencies will add each element in the slice of [dependency.Dependency]
 	AddDependencies(dependencies []dependency.Dependency[D]) error
+
+	// AddDependenciesFromTable adds all [table.PredecessorDependency]
 	AddDependenciesFromTable(table table.DependencyTable[D]) error
+
+	// RemoveDependency removes a dependency from a predecessor activity to the successor activity.
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
+
+	// Activities returns an iterator over all activities in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	Activities() func(yield func(activity.Activity[D]) bool)
+
+	// Successors returns an iterator over succeeding activities to the activity specified. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	Successors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool)
+
+	// Predecessors returns an iterator over preceeding activities to the activity specified. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	Predecessors(activity activity.Activity[D]) func(yield func(activity.Activity[D]) bool)
+
+	// InitialPredecessorActivities returns an iterator of all starting activities in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	InitialPredecessorActivities() func(yield func(activity.Activity[D]) bool)
+
+	// LoneActivities returns an iterator of all activities in [PDM] with no predecessor or successor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	LoneActivities() func(yield func(activity.Activity[D]) bool)
+
+	// IntermediaryActivities returns an iterator over activities between the start and final activities. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	IntermediaryActivities() func(yield func(activity.Activity[D]) bool)
+
+	// FinalSuccessorActivities returns an iterator of all final activities in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
 	FinalSuccessorActivities() func(yield func(activity.Activity[D]) bool)
+
+	// CriticalActivities returns an iterator over activities that are considered critical (any delay will affect the project end date). The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+	//
+	// The threshold parameter is the value at which if the total float of an activity is less than equal to the threshold value, it is considered critical.
 	CriticalActivities(threshold time.Duration) func(yield func(activity.Activity[D]) bool)
+
+	// UpdateActivityTimestamps updates all start/finish intervals for all activities in p. Returns CycleDetectedError if a cycle is detected in [PDM].
 	UpdateActivityTimestamps() error
+
+	// FreeFloat returns the maximum amount of time the specified activity can be delayed before the early start of any succeeding activity is delayed. (free float <= total float).
 	FreeFloat(activity activity.Activity[D]) time.Duration
+
+	// TotalFloat returns the float in activity [activity.Activity]. This is the amount of time the activity can be delayed without delaying the project end date
 	TotalFloat(activity activity.Activity[D]) time.Duration
 }
 
@@ -117,7 +153,7 @@ func (p *pdm[D]) CriticalActivities(threshold time.Duration) func(yield func(act
 	})
 }
 
-// TotalFloat implements [PDM]. TotalFloat returns the float in activity [activity]. This is the amount of time the activity can be delayed without delaying the project end date
+// TotalFloat implements [PDM]. TotalFloat returns the float in activity [activity.Activity]. This is the amount of time the activity can be delayed without delaying the project end date
 //
 // Added in pdm v1.0.0.
 func (p *pdm[D]) TotalFloat(activity activity.Activity[D]) time.Duration {
