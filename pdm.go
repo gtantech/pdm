@@ -93,11 +93,15 @@ type pdm[D activity.Data] struct {
 }
 
 // IncomingDependencies implements [PDM]. IncomingDependencies returns an iterator over all predecessor [activity.Activities] connected by [relationship.Relationship] to the successor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.1.0.
 func (p *pdm[D]) IncomingDependencies(successor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool) {
 	return p.graph.IncomingVerticesWithEdge(successor)
 }
 
 // OutgoingDependencies implements [PDM]. OutgoingDependencies returns an iterator over all successor [activity.Activities] connected by [relationship.Relationship] to the predecessor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+//
+// Added in pdm v1.1.0.
 func (p *pdm[D]) OutgoingDependencies(predecessor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool) {
 	return p.graph.OutgoingVerticesWithEdge(predecessor)
 }
