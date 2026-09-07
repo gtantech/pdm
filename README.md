@@ -25,7 +25,7 @@ go get -u github.com/gtantech/pdm
 * Total Float and Free Float calculations of each activity
 * Determining which activities are start, middle or final, or are isolated
 * Cycle detection (circular dependencies)
-
+* Project duration
 ## Example
 
 ```go
