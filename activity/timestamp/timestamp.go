@@ -15,6 +15,8 @@ type timestamp struct {
 }
 
 // New returns a new *[timestamp].
+//
+// Added in pdm v1.0.0.
 func New(early interval.Interval, late interval.Interval) *timestamp {
 	return &timestamp{early: early, late: late}
 }

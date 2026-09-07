@@ -27,7 +27,7 @@ func (a *activity[D]) TotalFloat() time.Duration {
 
 // New returns a new *[activity].
 //
-// Added in pdm v1.0.0
+// Added in pdm v1.0.0.
 func New[D Data](data D) *activity[D] {
 	interval := interval.FromStart(0, data.Duration())
 	return &activity[D]{data: data, Timestamp: timestamp.New(interval, interval)}
@@ -35,7 +35,7 @@ func New[D Data](data D) *activity[D] {
 
 // Data implements [Activity]. Data returns the associated data in a *[activity].
 //
-// Added in pdm v1.0.0
+// Added in pdm v1.0.0.
 func (a *activity[D]) Data() D {
 	return a.data
 }

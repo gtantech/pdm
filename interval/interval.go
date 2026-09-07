@@ -13,6 +13,8 @@ type interval struct {
 }
 
 // New returns a new *[interval]
+//
+// Added in pdm v1.0.0.
 func New(start time.Duration, finish time.Duration) *interval {
 	return &interval{start: start, finish: finish}
 }
