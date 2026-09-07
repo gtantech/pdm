@@ -87,6 +87,8 @@ type pdm[D activity.Data] struct {
 }
 
 // Duration implements [PDM]. Duration returns the duration of the project [PDM] , ie. the project end date.
+//
+// Added in pdm v1.1.0.
 func (p *pdm[D]) Duration() time.Duration {
 	maxLateFinish := time.Duration(0)
 	for a := range p.Activities() {
