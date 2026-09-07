@@ -1322,3 +1322,64 @@ func TestDuration(t *testing.T) {
 		t.Errorf("want: %T %#v", want, want)
 	}
 }
+
+func TestOutgoingDependencies(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*4))
+	relationship1 := relationship.New(enums.FS)
+	relationship2 := relationship.New(enums.FS)
+	p.AddDependency(A, B, relationship1)
+	p.AddDependency(C, B, relationship2)
+
+	for a, r := range p.OutgoingDependencies(A) {
+		if a != A && r != relationship1 {
+			t.Errorf("got %v, want %v", a, A)
+			t.Errorf("got %v, want %v", r, relationship1)
+		}
+	}
+	for a, r := range p.OutgoingDependencies(B) {
+		t.Errorf("expected no outgoing dependencies, got %v : %v", a, r)
+	}
+	for a, r := range p.OutgoingDependencies(C) {
+		if a != C && r != relationship2 {
+			t.Errorf("got %v, want %v", a, C)
+			t.Errorf("got %v, want %v", r, relationship2)
+		}
+	}
+}
+
+func TestIncomingependencies(t *testing.T) {
+	p := New[*mockActivityData]()
+
+	if p.graph == nil {
+		t.Errorf("expected non-nil graph")
+	}
+
+	A := activity.New(NewMockActivityData("A", time.Minute*3))
+	B := activity.New(NewMockActivityData("B", time.Minute*4))
+	C := activity.New(NewMockActivityData("C", time.Minute*4))
+	relationship1 := relationship.New(enums.FS)
+	relationship2 := relationship.New(enums.FS)
+	p.AddDependency(A, B, relationship1)
+	p.AddDependency(C, B, relationship2)
+
+	for a, r := range p.IncomingDependencies(A) {
+		t.Errorf("expected no outgoing dependencies, got %v : %v", a, r)
+	}
+	for a, r := range p.IncomingDependencies(B) {
+		if !((a == C && r == relationship2) || (a == A && r == relationship1)) {
+			t.Errorf("got %v, want %v or %v", a, C, A)
+			t.Errorf("got %v, want %v or %v", r, relationship2, relationship1)
+		}
+	}
+	for a, r := range p.IncomingDependencies(C) {
+		t.Errorf("expected no outgoing dependencies, got %v : %v", a, r)
+	}
+}

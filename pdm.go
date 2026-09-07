@@ -38,6 +38,12 @@ type PDM[D activity.Data] interface {
 	// RemoveDependency removes a dependency from a predecessor activity to the successor activity.
 	RemoveDependency(predecessor activity.Activity[D], successor activity.Activity[D])
 
+	// OutgoingDependencies returns an iterator over all successor [activity.Activities] connected by [relationship.Relationship] to the predecessor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+	OutgoingDependencies(predecessor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool)
+
+	// IncomingDependencies returns an iterator over all predecessor [activity.Activities] connected by [relationship.Relationship] to the successor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+	IncomingDependencies(successor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool)
+
 	// GetRelationship returns the [relationship.Relationship] between the predecessor activity and successor activity.
 	GetRelationship(predecessor activity.Activity[D], successor activity.Activity[D]) (relationship.Relationship, bool)
 
@@ -84,6 +90,16 @@ var _ PDM[activity.Data] = (*pdm[activity.Data])(nil) //ensures pdm implements P
 
 type pdm[D activity.Data] struct {
 	graph graph.Graph[activity.Activity[D], relationship.Relationship]
+}
+
+// IncomingDependencies implements [PDM]. IncomingDependencies returns an iterator over all predecessor [activity.Activities] connected by [relationship.Relationship] to the successor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+func (p *pdm[D]) IncomingDependencies(successor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool) {
+	return p.graph.IncomingVerticesWithEdge(successor)
+}
+
+// OutgoingDependencies implements [PDM]. OutgoingDependencies returns an iterator over all successor [activity.Activities] connected by [relationship.Relationship] to the predecessor in [PDM]. The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+func (p *pdm[D]) OutgoingDependencies(predecessor activity.Activity[D]) func(yield func(activity.Activity[D], relationship.Relationship) bool) {
+	return p.graph.OutgoingVerticesWithEdge(predecessor)
 }
 
 // Duration implements [PDM]. Duration returns the duration of the project [PDM] , ie. the project end date.
