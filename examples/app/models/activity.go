@@ -4,11 +4,13 @@ import (
 	"time"
 	"uuid"
 
+	"github.com/gtantech/pdm"
 	_activity "github.com/gtantech/pdm/activity"
 )
 
 type Activity interface {
 	DisplayName() string
+	Delete() //Delete removes the activity from the associated pdm
 	ID() uuid.UUID
 	_activity.Data
 }
@@ -27,6 +29,16 @@ func (a *activity) ID() uuid.UUID {
 
 func (a *activity) DisplayName() string {
 	return a.dispName
+}
+
+// Delete removes the activity from the associated pdm
+func (a *activity) Delete() {
+	a.removeFromPDM(a.project)
+}
+
+func (a *activity) removeFromPDM(pdm pdm.PDM[Activity]) {
+	pdm.RemoveActivity(a.pdmActivity)
+	a.pdmActivity = nil
 }
 
 var _ Activity = (*activity)(nil) //ensures activity implements Activity at compile time
