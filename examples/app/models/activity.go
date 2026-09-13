@@ -4,17 +4,17 @@ import (
 	"time"
 	"uuid"
 
-	pdmActivity "github.com/gtantech/pdm/activity"
+	_activity "github.com/gtantech/pdm/activity"
 )
 
 type Activity interface {
 	DisplayName() string
 	ID() uuid.UUID
-	pdmActivity.Data
+	_activity.Data
 }
 
 type activity struct {
-	pdmActivity.Data
+	_activity.Data
 	id       uuid.UUID
 	dispName string
 }
@@ -30,5 +30,5 @@ func (a *activity) DisplayName() string {
 var _ Activity = (*activity)(nil) //ensures activity implements Activity at compile time
 
 func NewActivity(dispName string, duration time.Duration) *activity {
-	return &activity{Data: pdmActivity.NewData(duration), id: uuid.NewV7(), dispName: dispName}
+	return &activity{Data: _activity.NewData(duration), id: uuid.NewV7(), dispName: dispName}
 }
